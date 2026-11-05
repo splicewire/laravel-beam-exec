@@ -1,8 +1,21 @@
-# The js/ directory is the @splicewire/beam-exec JS package. It travels in Git clones (a JS Git release builds
-# from it) but not in the PHP Composer distribution archive, so a consumer's vendor/ tree stays PHP-only.
-/js export-ignore
+# js/beam-exec is the @splicewire/beam-exec JS package, and it ships in every archive of this repository.
+#
+# A JS host pins it as `github:splicewire/laravel-beam-exec#<release sha>&path:/js/beam-exec`. This repository is
+# public, so pnpm fetches that pin as a codeload tarball, and codeload is `git archive`: it honours export-ignore.
+# A `/js export-ignore` here left the tarball without js/beam-exec, and no GitHub pin form could install the package.
+# (beam-commerce keeps `/js export-ignore` only because its repository is private: codeload refuses it, and pnpm falls
+# back to a git clone, which ignores these attributes.)
+#
+# Composer's dist of a GitHub package is the same archive (the zipball), so it carries js/beam-exec too. One archive
+# cannot hold a directory for one reader and drop it for the other. The package directory ships whole, so a tarball
+# can still build itself where a host runs install scripts.
 
-# Git-root JS policy travels in clones, not the PHP distribution.
+# The js/ workspace's own custody (changesets, its README and ignores) is not the package: it travels in clones only.
+/js/.changeset export-ignore
+/js/.gitignore export-ignore
+/js/README.md export-ignore
+
+# Git-root JS policy travels in clones, not in an archive: a `&path:` pin reads only js/beam-exec.
 /package.json export-ignore
 /pnpm-workspace.yaml export-ignore
 /pnpm-lock.yaml export-ignore
