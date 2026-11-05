@@ -1,0 +1,221 @@
+{
+    "name": "splicewire/laravel-beam-exec",
+    "description": "The exec realm for Beam hosts: a board-meeting dashboard whose cards read growth, revenue, usage and posture through one lens (live, truth, scenario or projection). See AGENTS.md.",
+    "keywords": [
+        "laravel",
+        "splicewire",
+        "beam",
+        "exec",
+        "dashboard",
+        "board"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Stephen Rushing",
+            "email": "stephenr85@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "illuminate/contracts": "^11.0|^12.0|^13.0",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "rushing/php-popcorn": "dev-main",
+        "spatie/laravel-package-tools": "^1.16",
+        "splicewire/laravel-beam": "*",
+        "splicewire/laravel-beam-commerce": "*",
+        "splicewire/laravel-beam-synthetic": "*",
+        "splicewire/laravel-beam-tenancy": "*",
+        "splicewire/laravel-beam-ux": "*"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "pestphp/pest": "^4.0",
+        "wikimedia/composer-merge-plugin": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Splicewire\\Beam\\Exec\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Splicewire\\Beam\\Exec\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        },
+        "laravel": {
+            "providers": [
+                "Splicewire\\Beam\\Exec\\BeamExecServiceProvider"
+            ]
+        },
+        "package-topology": {
+            "because": "beam-exec is the beam-tier exec realm and board dashboard. It depends DOWN on beam core, beam-ux (the realm dashboard and card surface), beam-tenancy and beam-commerce (the feeds its metrics read) and beam-synthetic (the scenario and projection lenses read a synthetic portfolio; owner ruling D9 makes that a hard require). It sits below the composed tower host and the satellite tier: tower contributes its posture signal DOWN into exec's registry, and exec never requires tower or a satellite back.",
+            "mustRequire": [
+                "splicewire/laravel-beam",
+                "splicewire/laravel-beam-ux",
+                "splicewire/laravel-beam-tenancy",
+                "splicewire/laravel-beam-commerce",
+                "splicewire/laravel-beam-synthetic"
+            ],
+            "mustNotRequire": [
+                "splicewire/tower",
+                "splicewire/laravel-satellite",
+                "splicewire/laravel-tower-*"
+            ]
+        },
+        "merge-plugin": {
+            "include": [
+                "composer.local.json"
+            ]
+        }
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/codegen.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-commerce.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-data-filters.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-data-nav.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-doctor.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-mcp-registry.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-permission-cascade.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-pipeline-registry.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-popcorn.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-postgres-rls.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-schema-convergence.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/laravel-versioning.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/php-graphine.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/stephenr85/php-popcorn.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/schemastud/laravel-blockdoc.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/schemastud/laravel-data-schemas.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/schemastud/laravel-frame.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/schemastud/laravel-json-ns.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/schemastud/php-json-ns.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-accounts.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-analytics.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-commerce.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-mcp.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-mdx.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-provision.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-sitemap.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-sync.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-taxonomy.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-tenancy.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-ux.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-workflows.git"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "@php vendor/bin/pest",
+        "pint": "@php -d memory_limit=512M vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true,
+            "wikimedia/composer-merge-plugin": true
+        }
+    }
+}
