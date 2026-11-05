@@ -3,7 +3,6 @@
 namespace Splicewire\Beam\Exec\Concerns;
 
 use Rushing\Popcorn\Concerns\Chained;
-use Splicewire\Beam\Dashboard\RealmDashboard;
 use Splicewire\Beam\Exec\BeamExecServiceProvider;
 use Splicewire\Beam\Exec\Realm\ExecRealm;
 use Splicewire\Beam\Nav\NavAudience;
@@ -69,7 +68,13 @@ trait WiresExecRealm
     }
 
     /**
-     * The `board` seat: the exec realm's one top-level nav section, landing on the realm's dashboard.
+     * The `board` seat: the exec realm's one top-level nav section, whose children are the board's cards.
+     *
+     * Its href is the section's own path, `/exec/board`, never the dashboard leaf's `/exec/dashboard`. The
+     * console matches a seat's href as a section index before it matches a resource leaf, and excludes only
+     * seats whose route name is a bound leaf. A seat is `board.section`, never bound, so a seat on the
+     * dashboard's path drew the Board section's index there instead of the cards. The dashboard stays its
+     * own top-level leaf (beam-ux registers it per realm), beside this seat.
      *
      * Gated on `exec.view`, the realm's own entitlement, so the seat is never a softer door than the realm.
      * `bound()`-guarded like every package seat: whether beam is new enough to bind the registry is a fact
@@ -87,7 +92,7 @@ trait WiresExecRealm
             realm: ExecRealm::KEY,
             label: 'Board',
             icon: 'Presentation',
-            href: ExecRealm::ROUTE_BASE.'/'.RealmDashboard::PATH,
+            href: ExecRealm::ROUTE_BASE.'/'.ExecRealm::SECTION,
             order: 10,
             entitlement: [ExecRealm::ENTITLEMENT],
             permission: null,

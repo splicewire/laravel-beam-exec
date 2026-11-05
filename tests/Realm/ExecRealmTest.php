@@ -12,6 +12,8 @@ use Splicewire\Beam\Particle\ParticleResourceRegistry;
 use Splicewire\Beam\Realm\RealmGateAbility;
 use Splicewire\Beam\Realm\RealmRegistry;
 use Splicewire\Beam\Surgeon\RealmGateCoverageAudit;
+use Splicewire\Beam\Ux\Frame\RealmConsoleSegments;
+use Splicewire\Beam\Ux\Frame\RouteContextProjector;
 
 it('lists the realm marker, the profile and the entitlement key in config', function () {
     expect(config('beam.core.realms.classes'))->toContain(ExecRealm::class)
@@ -55,11 +57,25 @@ it('gets its dashboard from beam-ux at boot, carrying the realm gate as its poli
         ->and($dashboard->readOnly)->toBeTrue();
 });
 
-it('seats one board section in the exec realm, landing on the dashboard and gated on exec.view', function () {
+it('seats one board section in the exec realm, on its own path and gated on exec.view', function () {
     $seats = app(NavSectionRegistry::class)->for('exec');
 
     expect(array_map(fn (NavSection $s): array => [$s->key, $s->href, $s->entitlement], $seats))
-        ->toBe([['board', '/exec/dashboard', ['exec.view']]]);
+        ->toBe([['board', '/exec/board', ['exec.view']]]);
+});
+
+it('never seats the board on a leaf, so /exec/dashboard draws the cards and not the section index', function () {
+    // The console matches a seat's href as a section index BEFORE the generated leaves, and skips only a seat
+    // whose route name is a bound leaf. A seat's route name is `{key}.section`, never bound, so a seat on a
+    // leaf's path shadows that leaf. Measured on the ticket-17 starter host: the seat sat on
+    // `/exec/dashboard` and the dashboard drew "Board" with the cards as links instead of the cards.
+    $leaves = app(RouteContextProjector::class)->hrefs('exec');
+    $seats = array_map(fn (NavSection $s): string => $s->href, app(NavSectionRegistry::class)->for('exec'));
+
+    expect($leaves[RealmDashboard::routeNameFor('exec')] ?? null)->toBe('/exec/'.RealmDashboard::PATH)
+        ->and(array_values(array_intersect($seats, $leaves)))->toBe([])
+        // Both doors are served by the console: the dashboard leaf and the section's own index.
+        ->and(RealmConsoleSegments::for('exec', 'exec'))->toContain(RealmDashboard::PATH, ExecRealm::SECTION);
 });
 
 it('leaves no orphaned realm gate: the exec gate names a registered realm', function () {
