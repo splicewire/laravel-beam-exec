@@ -189,6 +189,10 @@
         },
         {
             "type": "git",
+            "url": "https://github.com/splicewire/laravel-beam-synthetic.git"
+        },
+        {
+            "type": "git",
             "url": "https://github.com/splicewire/laravel-beam-taxonomy.git"
         },
         {
