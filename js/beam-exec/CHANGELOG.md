@@ -1,5 +1,13 @@
 # @splicewire/beam-exec
 
+## 0.1.1
+
+### Patch Changes
+
+- de1b6b7: The package installs from GitHub. 0.1.0's repository export-ignored `js/`, and codeload (which serves a public
+  `github:` pin as a `git archive` tarball) honoured it, so the tarball had no `js/beam-exec` and no GitHub spec form could
+  install it. `js/beam-exec` now ships in every archive. No source change.
+
 ## 0.1.0
 
 ### Minor Changes
