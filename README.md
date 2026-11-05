@@ -6,8 +6,8 @@ only, a synthetic scenario, or a projection forward from today.
 
 This release adds the `exec` realm, its gate and its dashboard, and the board's cards: a way to
 declare one (`#[BoardCard]` on a `BoardMetric`), the `beam.exec.cards` registry, the `make-card`
-generator, and one built-in card, **Tenants**. The growth, revenue, usage, plan-mix, posture and risk
-cards, and the lens, follow.
+generator, and the built-in cards **Tenants**, **Growth**, **Plan mix** and **Usage**. The revenue,
+posture and risk cards, and the lens switch, follow.
 
 ## Install
 
@@ -54,7 +54,8 @@ final class PipelineCard implements BoardMetric
 ```
 
 List it in `config('beam.exec.cards')` (a list you declare replaces the default, so keep
-`TenantsCard::class` in it if you want it), or add it from your provider's `register()` with
+the built-in `TenantsCard`, `GrowthCard`, `PlanMixCard` and `UsageCard` in it if you want them), or add it
+from your provider's `register()` with
 `app(BoardCardRegistry::class)->add(PipelineCard::class)`. `php artisan splicewire:beam:exec:make-card
 PipelineCard` generates one.
 
@@ -63,8 +64,12 @@ without more wiring: as a card on `/exec/dashboard`, as a leaf in the Board sect
 at `/exec/exec-{key}` listing the same figures. A card reads under the board's gate unless its
 attribute names a narrower `ability`.
 
-A card reads **only** through the source it is handed. The package binds `LiveBoardSource`, which
-reads the live estate centrally, synthetic tenants included; the lens will swap it. The full guide is
+A card reads **only** through the source it is handed: the tenants, their plan subscriptions and their
+monthly metered usage, as of the source's own instant (`asOf()`). The package binds `LiveBoardSource`,
+which reads the central tables in one of two readings: **live** (synthetic tenants included) or
+**truth** (real tenants only). It reads the truth while beam-tenancy's reporting toggle excludes
+synthetic tenants, the same switch `Tenant::reportable()` obeys, so flipping it moves the board on the
+next request. Every subscription and usage row is narrowed to the tenants the reading sees. The full guide is
 the registry page, [`docs/registries/beam.exec.cards.mdx`](docs/registries/beam.exec.cards.mdx).
 
 The built-in cards are **Tenants** (headcount), **Posture** (the worst status any posture check

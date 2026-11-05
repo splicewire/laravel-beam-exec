@@ -58,4 +58,21 @@ abstract class TestCase extends Orchestra
             DoctorServiceProvider::class,
         ];
     }
+
+    /**
+     * beam-commerce's models pin `protected $connection = 'central'`, and the board reads them. Two differently
+     * named connections to `:memory:` would be two databases, so the default connection IS `central`: the tenant
+     * table, the commerce tables and every test's own schema all land in one sqlite database (beam-commerce's own
+     * harness does the same).
+     */
+    protected function defineEnvironment($app): void
+    {
+        $app['config']->set('database.default', 'central');
+        $app['config']->set('database.connections.central', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+            'foreign_key_constraints' => false,
+        ]);
+    }
 }

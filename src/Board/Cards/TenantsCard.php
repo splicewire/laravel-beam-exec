@@ -2,7 +2,6 @@
 
 namespace Splicewire\Beam\Exec\Board\Cards;
 
-use Carbon\CarbonImmutable;
 use Schemastud\Frame\Data\SummaryFigureData;
 use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
 use Splicewire\Beam\Exec\Board\BoardMetric;
@@ -31,7 +30,7 @@ final class TenantsCard implements BoardMetric
     public function measure(BoardSource $source): array
     {
         $tenants = $source->tenants();
-        $monthStart = CarbonImmutable::now()->startOfMonth();
+        $monthStart = $source->asOf()->startOfMonth();
         $count = fn (callable $test): int => count(array_filter($tenants, $test));
 
         return [

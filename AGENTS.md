@@ -15,10 +15,15 @@ Beam tier, MIT.
 
 - The card DX (`src/Board/`, `src/Concerns/WiresBoardCards.php`): `#[BoardCard]` on a `BoardMetric`,
   the `beam.exec.cards` registry (`BoardCardRegistry`, filled from config), the `BoardSource` port
-  (bound scoped to `LiveBoardSource`), and `splicewire:beam:exec:make-card`. Each card is registered
+  (bound scoped to `LiveBoardSource::reportable()`: `truth` while beam-tenancy's reporting toggle
+  excludes synthetic tenants, `live` otherwise), and `splicewire:beam:exec:make-card`. Each card is registered
   at boot as an imperative particle resource `exec-{key}` (realm `exec`, section `board`) with an
   INSTANCE backing, `BoardCardBacking`, carrying its key, and `BoardCardSummaryProvider`. Read Data:
-  `BoardFigureData`. The reference card is `TenantsCard`; `PostureCard` and `RiskCard` are built in.
+  `BoardFigureData`. The reference card is `TenantsCard`.
+- The built-in metric cards (`src/Board/Cards/`): `TenantsCard`, `GrowthCard`, `PlanMixCard`,
+  `UsageCard`, `PostureCard` and `RiskCard`. `BoardSource` reads `asOf()`, `tenants()`, `subscriptions()`,
+  `usage($month)` and `posture()`; the value objects are `BoardTenant`, `BoardSubscription` and `BoardUsage`, and
+  `Figures` holds the shared rate arithmetic. Every read is narrowed to the tenant set, so a card never filters by lens.
 - The posture registry (`src/Posture/`, `src/Concerns/WiresPosture.php`): `beam.exec.posture`
   (`PostureRegistry`, filled from config, key => `PostureContributor` class), read by
   `LiveBoardSource::posture()`. The default `doctor` contributor runs `beam.doctor.audits` through
@@ -28,8 +33,7 @@ Beam tier, MIT.
 What lands next, in the exec-board build order (the plan is the exec-board map in the ecosystem
 scratch tracker):
 
-- The board metrics: growth, usage, plan mix, and revenue (MRR and churn).
-- Tower's own posture contributor, registered from the tower side.
+- The revenue card (MRR and churn).
 - `BoardLens`, resolved per request, which rebinds `BoardSource` (Truth, Scenario, Projection).
 
 ## Rules that are easy to get backwards
@@ -40,6 +44,8 @@ scratch tracker):
   fences are declared in `composer.json` `extra.package-topology` and pinned by `tests/Topology/`.
 - **Synthetic is a hard require** (owner ruling D9), because the Scenario and Projection lenses read
   a synthetic portfolio.
+- **Cards read time only through `BoardSource::asOf()`.** "This month" is the source's month, never
+  `now()`: a scenario or projection reads a month that is not today's.
 - **Cards read only through `BoardSource`.** Under the Scenario lens every card must run with zero
   queries. `tests/Board/BoardCardsTest.php` measures every registered card against an in-memory source
   inside `DB::listen`; a new card that queries turns it red. A new `BoardSource` method must be

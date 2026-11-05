@@ -4,9 +4,12 @@
 //
 // Each key lands with the code that reads it, in the same commit, so no key exists without a reader.
 
+use Splicewire\Beam\Exec\Board\Cards\GrowthCard;
+use Splicewire\Beam\Exec\Board\Cards\PlanMixCard;
 use Splicewire\Beam\Exec\Board\Cards\PostureCard;
 use Splicewire\Beam\Exec\Board\Cards\RiskCard;
 use Splicewire\Beam\Exec\Board\Cards\TenantsCard;
+use Splicewire\Beam\Exec\Board\Cards\UsageCard;
 use Splicewire\Beam\Exec\Posture\Contributors\DoctorPostureContributor;
 
 return [
@@ -16,6 +19,9 @@ return [
     // this package's built-in cards; a host that declares its own list replaces it, so list them too to keep them.
     'cards' => [
         TenantsCard::class,
+        GrowthCard::class,
+        PlanMixCard::class,
+        UsageCard::class,
         PostureCard::class,
         RiskCard::class,
     ],

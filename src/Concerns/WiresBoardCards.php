@@ -25,7 +25,9 @@ use Splicewire\Beam\Particle\ParticleResourceRegistry;
  * factory, under the registrant `config:beam.exec.cards`.
  *
  * {@see BoardSource} is bound SCOPED: one source per request (or per job), so a memoized read is never served to the
- * next request. The package binds the live source. Whatever selects the board's lens rebinds it.
+ * next request. The package binds {@see LiveBoardSource::reportable()}: the live reading, or the truth while
+ * beam-tenancy's reporting toggle excludes synthetic tenants (read when the request first asks, so a flip needs no
+ * redeploy). Whatever selects the board's lens rebinds it.
  *
  * ## Boot phase: one resource per card
  *
@@ -53,7 +55,7 @@ trait WiresBoardCards
             return $registry;
         });
 
-        $this->app->scoped(BoardSource::class, LiveBoardSource::class);
+        $this->app->scoped(BoardSource::class, fn (): BoardSource => LiveBoardSource::reportable());
     }
 
     #[Chained('boot', order: 20)]

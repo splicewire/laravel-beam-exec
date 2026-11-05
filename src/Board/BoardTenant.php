@@ -15,6 +15,8 @@ final class BoardTenant
      * @param  bool  $synthetic  whether the tenant is a synthetic tenant (generated, not a real customer)
      * @param  bool  $suspended  whether the tenant is suspended (orthogonal to `$status`)
      * @param  CarbonImmutable|null  $createdAt  when the tenant was created; null when the source does not know
+     * @param  string|null  $brokerId  the broker this is a Brokered Tenant of; null = a direct tenant. A Brokered
+     *                                 Tenant holds no subscription of its own: its broker is billed for it.
      */
     public function __construct(
         public readonly string $id,
@@ -23,10 +25,16 @@ final class BoardTenant
         public readonly bool $synthetic = false,
         public readonly bool $suspended = false,
         public readonly ?CarbonImmutable $createdAt = null,
+        public readonly ?string $brokerId = null,
     ) {}
 
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    public function isBrokered(): bool
+    {
+        return $this->brokerId !== null;
     }
 }

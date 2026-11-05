@@ -22,6 +22,23 @@ its own page and its figures on the dashboard, so the two cannot disagree.
 `BoardSource`, everything a card may read. Request-scoped; the lens chooses which one is bound.
 Every method must be answerable in memory, because a scenario is one.
 
+**As-of instant**:
+`BoardSource::asOf()`, the moment a board reads as of. Every "this month" on a card is this instant's
+month. The live source answers the wall clock; a scenario or projection answers its own month.
+
+**Growth**:
+The tenant base at the as-of instant against the base the month began with (and the base a year
+earlier). A tenant counts in a base once created; a tenant with no known creation date counts in every
+base. Logos that leave belong to revenue, not growth.
+
+**Plan mix**:
+The tenants holding each plan in force at the as-of instant, counted by tenant, not by subscription.
+A Brokered Tenant holds no plan of its own and is never "without a plan".
+
+**Usage cost**:
+What metered usage cost the platform (provider cost), by tenant and meter and month, before any
+markup a plan charges on it. Revenue from usage is a separate figure.
+
 **Lens**:
 `BoardLens`, the per-request choice of what the board reads:
 - **Live**, the default: the database as it is, synthetic tenants included;

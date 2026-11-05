@@ -32,13 +32,18 @@ same figures.
 
 ## Who fills it
 
-This package registers its built-in cards through its own config default. A host lists the cards
-it wants in `config('beam.exec.cards')`, as a list of classes:
+This package registers its built-in cards through its own config default: **Tenants** (the
+headcount), **Growth** (how fast the tenant base grows), **Plan mix** (who holds which plan) and
+**Usage** (what metered usage costs the platform). A host lists the cards it wants in
+`config('beam.exec.cards')`, as a list of classes:
 
 ```php
 // config/beam/exec.php
 'cards' => [
     \Splicewire\Beam\Exec\Board\Cards\TenantsCard::class,
+    \Splicewire\Beam\Exec\Board\Cards\GrowthCard::class,
+    \Splicewire\Beam\Exec\Board\Cards\PlanMixCard::class,
+    \Splicewire\Beam\Exec\Board\Cards\UsageCard::class,
     \App\Board\Cards\PipelineCard::class,
 ],
 ```
@@ -97,9 +102,18 @@ final class PipelineCard implements BoardMetric
 figure's `tone` is one of `default`, `active`, `busy`, `warn` or `danger`, or null for none.
 
 **Read only through the source.** Everything a card shows comes from the `BoardSource` it is
-handed, never from a model, the database or config. The source is what the board is currently
-reading: live data today, and later the truth without synthetic tenants, a synthesized scenario or
-a projection. A card that reads around the source would show live numbers under a "Synthesized"
+handed, never from a model, the database or config. A source offers:
+
+- `tenants()`: every tenant the board can see, as plain values (status, creation date, broker,
+  whether it is synthetic);
+- `subscriptions()`: their plan subscriptions, ended ones included, with plan, window and terms;
+- `usage('2026-08')`: one month's metered usage, by tenant and meter, at provider cost;
+- `asOf()`: the instant the board reads as of. "This month" is this instant's month, not today's.
+
+Every read is already narrowed to the tenants the source sees, so a card never filters for itself.
+The source is what the board is currently reading: the live estate, synthetic tenants included, or
+the truth without them (the board reads the truth while the reporting toggle in beam-tenancy
+excludes synthetic tenants), and later a synthesized scenario or a projection. A card that reads around the source would show live numbers under a "Synthesized"
 banner. This package's test suite measures every registered card against an in-memory source and
 fails on a single query.
 

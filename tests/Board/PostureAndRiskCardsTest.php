@@ -27,7 +27,7 @@ function riskTenant(string $id, string $status = 'active', bool $suspended = fal
 it('registers the posture and risk cards on the board after the headcount', function () {
     $particles = app(ParticleResourceRegistry::class);
 
-    expect(app(BoardCardRegistry::class)->cardKeys())->toBe(['tenants', 'posture', 'risk'])
+    expect(app(BoardCardRegistry::class)->cardKeys())->toBe(['tenants', 'growth', 'plan-mix', 'usage', 'posture', 'risk'])
         ->and($particles->keysForRealm('exec'))->toContain('exec-posture', 'exec-risk')
         ->and($particles->get('exec-posture')->section)->toBe('board')
         ->and($particles->get('exec-posture')->navOrder)->toBe(40)
@@ -73,7 +73,7 @@ it('counts suspended tenants, failed provisioning and failing checks as open ris
             riskTenant('demo', suspended: true, synthetic: true),
             riskTenant('hooli', status: 'provisioning'),
         ],
-        [PostureSignal::fail('a', 'broken'), PostureSignal::warn('b', 'drift'), PostureSignal::pass('c', 'ok')],
+        posture: [PostureSignal::fail('a', 'broken'), PostureSignal::warn('b', 'drift'), PostureSignal::pass('c', 'ok')],
     ));
 
     expect(figureRows($figures))->toBe([
@@ -85,7 +85,7 @@ it('counts suspended tenants, failed provisioning and failing checks as open ris
 });
 
 it('reads no open risk as zero, in the calm tone', function () {
-    $figures = (new RiskCard)->measure(new InMemoryBoardSource([riskTenant('acme')], [PostureSignal::warn('b', 'drift')]));
+    $figures = (new RiskCard)->measure(new InMemoryBoardSource([riskTenant('acme')], posture: [PostureSignal::warn('b', 'drift')]));
 
     expect(figureRows($figures))->toBe([
         ['open', 0, SummaryFigureData::TONE_ACTIVE],
