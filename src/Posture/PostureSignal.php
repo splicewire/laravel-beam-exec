@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Exec\Posture;
 
+use Carbon\CarbonImmutable;
 use Rushing\Doctor\DoctorStatus;
 use Rushing\Doctor\Finding;
 
@@ -17,6 +18,10 @@ use Rushing\Doctor\Finding;
  *
  * `$source` is the key of the contributor that produced the signal (`doctor`, `determination`). The board source
  * stamps it; a contributor leaves it null.
+ *
+ * `$measuredAt` is when the reading was taken, for a contributor that serves a stored report rather than looking
+ * now (the doctor's, {@see Contributors\DoctorPostureContributor}). Null means measured on this read. The posture
+ * card draws the oldest one as the posture's age.
  */
 final class PostureSignal
 {
@@ -26,6 +31,7 @@ final class PostureSignal
         public readonly string $detail,
         public readonly bool $conclusive = true,
         public readonly ?string $source = null,
+        public readonly ?CarbonImmutable $measuredAt = null,
     ) {}
 
     public static function pass(string $check, string $detail): self
@@ -57,7 +63,13 @@ final class PostureSignal
     /** The same signal, attributed to the contributor registered under `$source`. */
     public function from(string $source): self
     {
-        return new self($this->check, $this->status, $this->detail, $this->conclusive, $source);
+        return new self($this->check, $this->status, $this->detail, $this->conclusive, $source, $this->measuredAt);
+    }
+
+    /** The same signal, read from a report measured at `$at`. */
+    public function measured(CarbonImmutable $at): self
+    {
+        return new self($this->check, $this->status, $this->detail, $this->conclusive, $this->source, $at);
     }
 
     public function failing(): bool

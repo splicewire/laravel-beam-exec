@@ -107,3 +107,32 @@ it('draws the posture card\'s dashboard summary from the bound source', function
             ['status', 'Warn'], ['passing', 0], ['warnings', 1], ['failing', 0], ['unmeasured', 0],
         ]);
 });
+
+it('adds the age of the oldest stored reading, relative to the source\'s as-of moment, and nothing when every reading is current', function () {
+    $asOf = CarbonImmutable::parse('2026-08-20 12:00:00');
+    $stored = (new PostureCard)->measure(new InMemoryBoardSource(asOf: $asOf, posture: [
+        PostureSignal::pass('a', 'ok')->measured($asOf->subMinutes(12)),
+        PostureSignal::warn('b', 'drift')->measured($asOf->subMinutes(40)),
+        PostureSignal::fail('c', 'broken')->from('ledger'),
+    ]));
+    $current = (new PostureCard)->measure(new InMemoryBoardSource(posture: [PostureSignal::pass('a', 'ok')]));
+
+    expect(end($stored)->id)->toBe('measured')
+        ->and(end($stored)->value)->toBe('40 minutes ago')
+        ->and(end($stored)->label)->toBe('Measured')
+        ->and(array_column(figureRows($current), 0))->toBe(['status', 'passing', 'warnings', 'failing', 'unmeasured']);
+});
+
+it('reads failing checks as unmeasured, and the headline without the calm tone, when no posture signal measured anything', function (array $posture) {
+    $figures = (new RiskCard)->measure(new InMemoryBoardSource([riskTenant('acme')], posture: $posture));
+
+    expect(figureRows($figures))->toBe([
+        ['open', 0, null],
+        ['suspended', 0, null],
+        ['failed-provisioning', 0, null],
+        ['failing-checks', 'Unmeasured', null],
+    ]);
+})->with([
+    'no report yet' => [[PostureSignal::unmeasured('doctor.unmeasured', 'not yet')]],
+    'no signals' => [[]],
+]);

@@ -98,8 +98,12 @@ final class LedgerPosture implements PostureContributor
   registered under.
 
 A contributor is resolved from the container and may read the database. It runs on a board
-request, so keep it cheap or cache it. The doctor contributor caches its run for
-`beam.exec.doctor_posture_ttl` seconds (900 by default; 0 turns the cache off). A contributor that
+request, so keep it cheap or serve a stored reading. The doctor contributor never runs the audits on
+a board read: it serves the last report, with the time it was measured (the posture card shows its
+age), and queues a refresh when there is none or it is older than `beam.exec.doctor_posture_ttl`
+seconds (900 by default). Before the first report lands, the posture reads unmeasured. 0 runs the
+audits inline on every read. `splicewire:beam:exec:refresh-posture` refreshes the report now, for a
+schedule or a deploy step. A contributor that
 throws shows on the board as one failing `contributor-errored` signal, and every other contributor
 still reports.
 

@@ -12,6 +12,7 @@ use Splicewire\Beam\Exec\Concerns\WiresBoardLens;
 use Splicewire\Beam\Exec\Concerns\WiresExecRealm;
 use Splicewire\Beam\Exec\Concerns\WiresPosture;
 use Splicewire\Beam\Exec\Console\MakeBoardCardCommand;
+use Splicewire\Beam\Exec\Console\RefreshPostureCommand;
 
 /**
  * The exec realm, its board dashboard, the board's cards and the posture they count.
@@ -43,7 +44,7 @@ class BeamExecServiceProvider extends PackageServiceProvider implements ChainsTr
         $package
             ->name('laravel-beam-exec')
             ->hasConfigFile(['beam/exec'])
-            ->hasCommand(MakeBoardCardCommand::class);
+            ->hasCommands([MakeBoardCardCommand::class, RefreshPostureCommand::class]);
     }
 
     public function packageRegistered(): void

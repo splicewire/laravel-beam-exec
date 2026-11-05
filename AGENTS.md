@@ -28,8 +28,9 @@ Beam tier, MIT.
 - The posture registry (`src/Posture/`, `src/Concerns/WiresPosture.php`): `beam.exec.posture`
   (`PostureRegistry`, filled from config, key => `PostureContributor` class), read by
   `LiveBoardSource::posture()`. The default `doctor` contributor runs `beam.doctor.audits` through
-  the doctor's runner (a gate failure's report is read, not thrown) and caches it for
-  `beam.exec.doctor_posture_ttl`. Packages contribute DOWN with `afterResolving(PostureRegistry::class, …)`.
+  the doctor's runner (a gate failure's report is read, not thrown) off the board read: a read serves
+  the last report with its `measuredAt` and queues `RefreshDoctorPosture` when it is missing or older
+  than `beam.exec.doctor_posture_ttl` (cold = one unmeasured signal, never a pass; 0 = inline). Packages contribute DOWN with `afterResolving(PostureRegistry::class, …)`.
 
 - The lens (`src/Board/Lens/`): `BoardLens` (Live, Truth, Scenario or Projection) is bound scoped, resolved by
   `BoardLensResolver` from the encrypted `beam_exec_lens` cookie (`live`, `truth`, `scenario`,

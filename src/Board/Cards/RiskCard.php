@@ -19,6 +19,10 @@ use Splicewire\Beam\Exec\Posture\PostureSignal;
  *
  * The live board counts synthetic tenants, so a suspended synthetic tenant is a risk on the live reading too; the
  * truth reading leaves it out.
+ *
+ * Failing checks are counted only from a posture that measured something. When no posture signal is conclusive
+ * (no report has landed yet, or nothing had anything to look at), the figure reads `Unmeasured`, and the headline
+ * keeps its count of the tenant risks without the calm tone: measured nothing is never clean.
  */
 #[BoardCard(
     key: 'risk',
@@ -34,21 +38,29 @@ final class RiskCard implements BoardMetric
 
         $suspended = count(array_filter($tenants, fn (BoardTenant $t): bool => $t->suspended));
         $failed = count(array_filter($tenants, fn (BoardTenant $t): bool => $t->status === 'failed'));
-        $failing = count(array_filter($source->posture(), fn (PostureSignal $s): bool => $s->failing()));
+        $posture = $source->posture();
+        $measured = array_filter($posture, fn (PostureSignal $s): bool => $s->conclusive) !== [];
+        $failing = count(array_filter($posture, fn (PostureSignal $s): bool => $s->failing()));
 
         $tone = fn (int $n): ?string => $n > 0 ? SummaryFigureData::TONE_DANGER : null;
         $open = $suspended + $failed + $failing;
+        $calm = $measured ? SummaryFigureData::TONE_ACTIVE : null;
 
         return [
             new BoardFigureData(
                 id: 'open',
                 label: 'Open risks',
                 value: $open,
-                tone: $open > 0 ? SummaryFigureData::TONE_DANGER : SummaryFigureData::TONE_ACTIVE,
+                tone: $open > 0 ? SummaryFigureData::TONE_DANGER : $calm,
             ),
             new BoardFigureData(id: 'suspended', label: 'Suspended tenants', value: $suspended, tone: $tone($suspended)),
             new BoardFigureData(id: 'failed-provisioning', label: 'Failed provisioning', value: $failed, tone: $tone($failed)),
-            new BoardFigureData(id: 'failing-checks', label: 'Failing checks', value: $failing, tone: $tone($failing)),
+            new BoardFigureData(
+                id: 'failing-checks',
+                label: 'Failing checks',
+                value: $measured ? $failing : 'Unmeasured',
+                tone: $tone($failing),
+            ),
         ];
     }
 }

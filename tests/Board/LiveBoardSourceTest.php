@@ -19,6 +19,7 @@ use Splicewire\Beam\Exec\Board\Lens\BoardLens;
 use Splicewire\Beam\Exec\Board\Lens\BoardLensResolver;
 use Splicewire\Beam\Exec\Board\Sources\LiveBoardSource;
 use Splicewire\Beam\Exec\Board\Sources\ProjectionBoardSource;
+use Splicewire\Beam\Exec\Posture\Contributors\DoctorPostureContributor;
 use Splicewire\Beam\Tenancy\Synthetic\SyntheticReporting;
 use Splicewire\Beam\Tenancy\Tenant;
 
@@ -177,12 +178,13 @@ it('feeds the tenants card the live headcount', function () {
     expect($figures)->toBe(['total' => 4, 'active' => 2, 'new' => 1, 'synthetic' => 1]);
 });
 
-it('feeds the risk card the live suspensions, with an empty doctor manifest adding no failing check', function () {
+it('feeds the risk card the live suspensions, with an empty doctor manifest adding no failing check and measuring none', function () {
     app()->instance(BeamDoctorManifest::class, new BeamDoctorManifest);
+    app(DoctorPostureContributor::class)->refresh();
 
     $figures = collect((new RiskCard)->measure(app(LiveBoardSource::class)))->pluck('value', 'id')->all();
 
-    expect($figures)->toBe(['open' => 1, 'suspended' => 1, 'failed-provisioning' => 0, 'failing-checks' => 0]);
+    expect($figures)->toBe(['open' => 1, 'suspended' => 1, 'failed-provisioning' => 0, 'failing-checks' => 'Unmeasured']);
 });
 
 it('reads the truth without synthetic tenants, through the tenant model\'s notSynthetic scope', function () {

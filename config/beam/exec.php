@@ -62,8 +62,10 @@ return [
         'new_logo_plan' => null,
     ],
 
-    // Seconds the doctor-backed posture is cached for: it runs every registered readiness audit, on a board request.
-    // 0 runs them afresh on every read.
+    // Seconds a doctor posture report stays fresh. A board read never runs the readiness audits: it serves the last
+    // report with its age, and queues a refresh (RefreshDoctorPosture) when there is none or it is older than this.
+    // Before the first report lands the posture reads Unmeasured. `splicewire:beam:exec:refresh-posture` refreshes it
+    // now (a schedule or a deploy step). 0 runs every audit inline on every read, which can take a minute.
     'doctor_posture_ttl' => 900,
 
 ];

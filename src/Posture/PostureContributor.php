@@ -13,9 +13,9 @@ use Splicewire\Beam\Exec\Posture\Contributors\DoctorPostureContributor;
  * which reads the host's readiness audits. A package that knows something the doctor does not registers its own
  * contributor DOWN into the registry from its own provider; exec never names it.
  *
- * A contributor may read the database: it is read by the live source, not by a card. It should be cheap, or cache,
- * because it runs on a board request. A contributor that throws is reported as one failing signal rather than
- * blanking the board.
+ * A contributor may read the database: it is read by the live source, not by a card. It should be cheap, or serve a
+ * stored reading, because it runs on a board request; the doctor's serves its last report and refreshes it off the
+ * request. A contributor that throws is reported as one failing signal rather than blanking the board.
  */
 interface PostureContributor
 {

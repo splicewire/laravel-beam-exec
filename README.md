@@ -116,7 +116,11 @@ provisioning and failing checks, summed).
 
 The posture and risk cards count signals from the posture contributors in `beam.exec.posture`. The
 default, `doctor`, runs the readiness audits registered for `splicewire:beam:doctor` and reports each
-finding as one signal, cached for `beam.exec.doctor_posture_ttl` seconds (900). A package adds its own
+finding as one signal. A board read never runs those audits, which can take a minute: it serves the last
+report with its age, and queues a refresh when there is none or it is older than
+`beam.exec.doctor_posture_ttl` seconds (900). Until the first report lands, the posture and the risk card's
+failing checks read Unmeasured. Run `php artisan splicewire:beam:exec:refresh-posture` on a schedule or after
+a deploy to keep a report ready without a queue worker. A package adds its own
 contributor from its provider, naming the registry only by its class string:
 
 ```php

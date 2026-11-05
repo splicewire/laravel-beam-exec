@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Exec\Board\Cards;
 
+use Carbon\CarbonInterface;
 use Rushing\Doctor\DoctorStatus;
 use Schemastud\Frame\Data\SummaryFigureData;
 use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
@@ -21,6 +22,9 @@ use Splicewire\Beam\Exec\Posture\PostureSignal;
  *
  * A check that had nothing to look at is counted as unmeasured, never as passing, and does not raise the headline:
  * a board with nothing measured reads `Unmeasured`, not `Pass`.
+ *
+ * When a contributor serves a stored report (the doctor's does), the card adds `measured`: the age of the oldest
+ * reading, relative to the source's as-of moment, so a posture read from a report is never mistaken for one taken now.
  */
 #[BoardCard(
     key: 'posture',
@@ -63,6 +67,28 @@ final class PostureCard implements BoardMetric
                 tone: $failing > 0 ? SummaryFigureData::TONE_DANGER : null,
             ),
             new BoardFigureData(id: 'unmeasured', label: 'Unmeasured', value: $unmeasured),
+            ...$this->age($signals, $source),
         ];
+    }
+
+    /**
+     * @param  list<PostureSignal>  $signals
+     * @return list<BoardFigureData>
+     */
+    private function age(array $signals, BoardSource $source): array
+    {
+        $times = array_values(array_filter(array_map(fn (PostureSignal $s) => $s->measuredAt, $signals)));
+
+        if ($times === []) {
+            return [];
+        }
+
+        $oldest = min($times);
+
+        return [new BoardFigureData(
+            id: 'measured',
+            label: 'Measured',
+            value: $oldest->diffForHumans($source->asOf(), CarbonInterface::DIFF_RELATIVE_TO_NOW),
+        )];
     }
 }
