@@ -8,6 +8,7 @@ use Rushing\Popcorn\Registries\ScopesRegistrant;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Splicewire\Beam\Exec\Concerns\WiresBoardCards;
+use Splicewire\Beam\Exec\Concerns\WiresBoardLens;
 use Splicewire\Beam\Exec\Concerns\WiresExecRealm;
 use Splicewire\Beam\Exec\Concerns\WiresPosture;
 use Splicewire\Beam\Exec\Console\MakeBoardCardCommand;
@@ -28,6 +29,7 @@ class BeamExecServiceProvider extends PackageServiceProvider implements ChainsTr
     use ChainsTraitMethods;
     use ScopesRegistrant;
     use WiresBoardCards;
+    use WiresBoardLens;
     use WiresExecRealm;
     use WiresPosture;
 

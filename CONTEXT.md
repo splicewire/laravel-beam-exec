@@ -57,7 +57,13 @@ from the plan catalog when the scenario's source is built, so pricing a scenario
 The sticky bar and per-card note, "Synthesized — not real data", on every figure a Scenario lens
 produces. It cannot be configured off. In the data it is a `synthesized` flag on every
 figure and a leading `synthesized` figure on every card (`BoardWatermark`), stamped by the card
-registry, never by a card. The sticky bar is the lens bar's.
+registry, never by a card. The sticky bar is the lens bar's banner.
+
+**Lens bar**:
+The board's segmented switch over the four lenses, and the banner that states the watermark for the
+page under Scenario or Projection. Read and switched through two declared operations
+(`ReadBoardLens`, `SwitchBoardLens`); the banner is built from the source's watermark, not the
+cookie, and cannot be dismissed. Every response that carried a watermarked figure is no-store.
 
 **Projected watermark**:
 The Projection lens's mark, "Projected — not real data", kept distinct from the synthesized one: a

@@ -13,6 +13,7 @@ use Rushing\Popcorn\Registries\PopulationRequirement;
 use Rushing\Popcorn\Registries\Registry;
 use Rushing\Popcorn\Registries\RegistryKey;
 use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
+use Splicewire\Beam\Exec\Board\Lens\BoardLensBar;
 use Splicewire\Beam\Exec\Data\BoardFigureData;
 
 /**
@@ -124,10 +125,15 @@ class BoardCardRegistry implements Gated, Registry
      * Under a projecting source a card that does not declare `projects` measures nothing: it is absent from the
      * board, not drawn from present-day facts under a forecast.
      *
+     * Reading a watermarked source flags the current request's response no-store ({@see BoardLensBar::mark()}), so
+     * no cache serves a synthesized or projected card to a later reader.
+     *
      * @return list<BoardFigureData>
      */
     public function figures(BoardCardDefinition $definition, BoardSource $source): array
     {
+        BoardLensBar::mark($this->container->bound('request') ? $this->container->make('request') : null, $source);
+
         if ($source->projection() !== null && ! $definition->card->projects) {
             return [];
         }

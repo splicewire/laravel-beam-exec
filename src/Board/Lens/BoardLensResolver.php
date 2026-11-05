@@ -66,10 +66,23 @@ final class BoardLensResolver
 
     public function resolve(?Request $request): BoardLens
     {
-        $lens = BoardLens::parse($request?->cookie(BoardLens::COOKIE));
+        return $this->choose($request?->cookie(BoardLens::COOKIE)) ?? $this->default();
+    }
+
+    /**
+     * The lens a cookie value chooses on this host, or null when the board would not honour it: a value outside the
+     * vocabulary, or a portfolio the host does not declare. A bare `scenario` names the default portfolio (null when
+     * the host declares none); a bare `projection` takes `beam.exec.projection.portfolio`, or no portfolio at all.
+     *
+     * {@see resolve()} reads a null as the default lens, so a stale cookie cannot strand the board; the lens bar's
+     * switch refuses it instead, so it never sets a cookie the next request would ignore.
+     */
+    public function choose(mixed $value): ?BoardLens
+    {
+        $lens = BoardLens::parse($value);
 
         if ($lens === null) {
-            return $this->default();
+            return null;
         }
 
         if ($lens->mode === BoardLensMode::Projection) {
@@ -79,7 +92,7 @@ final class BoardLensResolver
                 return BoardLens::projection(chosen: true);
             }
 
-            return $this->portfolios->get($portfolio) !== null ? BoardLens::projection($portfolio, chosen: true) : $this->default();
+            return $this->portfolios->get($portfolio) !== null ? BoardLens::projection($portfolio, chosen: true) : null;
         }
 
         if ($lens->mode !== BoardLensMode::Scenario) {
@@ -90,7 +103,7 @@ final class BoardLensResolver
 
         return $portfolio !== null && $this->portfolios->get($portfolio) !== null
             ? BoardLens::scenario($portfolio, chosen: true)
-            : $this->default();
+            : null;
     }
 
     /** The lens a request reads without choosing one. */

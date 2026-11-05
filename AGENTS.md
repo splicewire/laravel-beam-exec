@@ -56,10 +56,12 @@ Beam tier, MIT.
   figure ("Projected — not real data", what was projected, tone warn).
   The card's page and its dashboard summary both read through `figures()`.
 
-What lands next, in the exec-board build order (the plan is the exec-board map in the ecosystem
-scratch tracker):
-
-- The lens bar (a segmented switch and the undismissable banner).
+- The lens bar (`src/Board/Lens/BoardLensBar.php`, `src/Ops/`, `src/Concerns/WiresBoardLens.php`, `js/beam-exec`):
+  two declared `#[ParticleOp]`s on `exec-dashboard`, `ReadBoardLens` (`GET {base}/lens`) and `SwitchBoardLens`
+  (`POST {base}/switch-lens`, sets the cookie, refuses an unhonoured lens with a 422), both `exec.view` on the
+  entitlement plane and answering `BoardLensBarData`. The banner is built from the source's watermark, never the
+  cookie. `NoStoreWatermarkedResponses` sends `no-store, private` on every response the registry marked. The JS
+  package `@splicewire/beam-exec` draws the switch and the banner (`exec/console` page, `BoardLensBar`).
 
 ## Rules that are easy to get backwards
 
@@ -81,6 +83,8 @@ scratch tracker):
   stamped in `BoardCardRegistry::figures()`, never by a card; measure a card through `figures()`, not
   `metric()->measure()`, anywhere its figures reach a reader. The figure ids `synthesized` and
   `projected` are reserved. A card sets only `forecast`, per month, with `Figures::forecast()`.
+- **The banner has no off switch.** No field hides it and the renderer draws no close control. Its presence
+  follows the source's watermark, so do not key it on the cookie or the mode.
 - **`projects: true` is a promise to read revenue only.** The Projection source refuses every other read,
   so a card that declares it and reads tenants fails loudly. Leave it off and the card is absent under
   Projection.

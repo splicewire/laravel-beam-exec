@@ -8,7 +8,7 @@ This release adds the `exec` realm, its gate and its dashboard, and the board's 
 declare one (`#[BoardCard]` on a `BoardMetric`), the `beam.exec.cards` registry, the `make-card`
 generator, the built-in cards **Tenants**, **Revenue**, **MRR trend**, **Growth**, **Plan mix**, **Usage**,
 **Posture** and **Risk**, and the board's lens: **Live**, **Truth**, a synthetic **Scenario** or a revenue
-**Projection**. The lens bar follows.
+**Projection**, with the lens bar that switches it.
 
 ## Install
 
@@ -38,6 +38,32 @@ your middleware plus `can:entitlement:exec.view`:
 | `exec.home` | `/exec` | redirects to the dashboard |
 | `exec.frame.manifest` | `/exec/frame/manifest` | the exec realm's frame manifest |
 | `exec.frame.console` | `/exec/{frameRoute}` | the frame console, for every leaf the realm projects |
+
+To give the console the lens bar, mount the two lens operations in the same group and name the bar's page on
+the console (both lines go above `Route::beamUxSite()`):
+
+```php
+use Splicewire\Beam\Exec\Ops\ReadBoardLens;
+use Splicewire\Beam\Exec\Ops\SwitchBoardLens;
+use Splicewire\Beam\Facades\Particle;
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Particle::ops('exec', 'exec-dashboard', [ReadBoardLens::class, SwitchBoardLens::class]);
+});
+Route::beamRealmConsole('exec', ['auth', 'verified'], page: 'exec/console');
+```
+
+and register the page from the `@splicewire/beam-exec` JS package (`js/beam-exec` in this repository) with your
+Inertia pages:
+
+```ts
+import { beamInertiaOptions, resolveBeamPage } from '@splicewire/beam-inertia';
+import { execPages } from '@splicewire/beam-exec';
+
+beamInertiaOptions({ pages: { ...execPages(resolveBeamPage), ...pages } });
+```
+
+`exec/console` is the packaged frame console with the lens bar above it. See "The lens bar" below.
 
 ## Cards
 
@@ -163,6 +189,30 @@ dashboard's summary figures, where `trend-card` dashes the forecast. Every figur
 projected**: `projected: true`, and a leading `projected` figure, "Projected — not real data", whose value says
 what was projected ("Live, October 2026 held flat, 6 months ahead"). A projection starts from real revenue, so it
 is not marked synthesized, and it is never unmarked either.
+
+## The lens bar
+
+The bar is a segmented switch over the four lenses and, under Scenario or Projection, a banner stating the
+watermark for the whole page. The banner has no close control and nothing configures it away.
+
+Two declared operations on the `exec-dashboard` resource serve it, both subject-free and gated by `exec.view`:
+
+| operation | route | what |
+|---|---|---|
+| `ReadBoardLens` | `GET /exec/lens` | the bar: the active lens, the four segments, the banner (`BoardLensBarData`) |
+| `SwitchBoardLens` | `POST /exec/switch-lens` | takes `{"lens": "scenario"}` (`BoardLensChoiceData`), sets the encrypted `beam_exec_lens` cookie and answers the bar the next request will read |
+
+The switch refuses, with a 422, any lens the board would not honour: a value outside the cookie vocabulary or a
+portfolio this host does not declare. (A stale cookie still reads as the default lens; only choosing one is
+strict.)
+
+The banner is taken from the source the cards read, the same `synthesizedFrom()` and `projection()` the
+watermark is stamped from, so it appears exactly when the cards are watermarked, whatever the cookie says.
+
+Every response that carried a synthesized or projected figure is sent `Cache-Control: no-store, private`: a card's
+page, a dashboard summary, the bar, and the switch itself. The card registry marks the request when it measures
+a card from a watermarked source, and a `RequestHandled` listener sets the header, so the rule covers frame's and
+beam's routes as well as this package's.
 
 ## Who sees the board
 

@@ -1,0 +1,3 @@
+# The js/ directory is the @splicewire/beam-exec JS package. It travels in Git clones (a JS Git release builds
+# from it) but not in the PHP Composer distribution archive, so a consumer's vendor/ tree stays PHP-only.
+/js export-ignore

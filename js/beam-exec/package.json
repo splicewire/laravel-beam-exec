@@ -1,0 +1,51 @@
+{
+    "name": "@splicewire/beam-exec",
+    "version": "0.1.0",
+    "description": "The exec board's lens bar for Beam hosts: a Live / Truth / Scenario / Projection switch over the declared lens operations of the PHP splicewire/laravel-beam-exec package, and the undismissable banner its synthesized or projected figures call for. Mirrors that package by domain.",
+    "license": "MIT",
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "sideEffects": false,
+    "files": [
+        "dist",
+        "src",
+        "README.md"
+    ],
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org",
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/splicewire/laravel-beam-exec.git",
+        "directory": "js/beam-exec"
+    },
+    "scripts": {
+        "build": "tsup",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit",
+        "prepublishOnly": "npm run build",
+        "prepare": "npm run build"
+    },
+    "peerDependencies": {
+        "react": ">=18"
+    },
+    "devDependencies": {
+        "@testing-library/react": "^16.1.0",
+        "@types/react": "^19.0.0",
+        "@types/react-dom": "^19.0.0",
+        "jsdom": "^25.0.1",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+        "tsup": "^8.5.1",
+        "typescript": "^5.7.2",
+        "vitest": "^4.1.10"
+    }
+}

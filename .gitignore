@@ -6,3 +6,7 @@ composer.local.json
 .DS_Store
 
 CLAUDE.md
+
+# The @splicewire/beam-exec JS package (js/beam-exec): its install and build output.
+node_modules/
+/js/beam-exec/dist/
