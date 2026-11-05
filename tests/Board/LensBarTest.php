@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Splicewire\Beam\Exec\Board\BoardCardDefinition;
+use Splicewire\Beam\Exec\Board\BoardCardRegistry;
 use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\BoardWatermark;
 use Splicewire\Beam\Exec\Board\Lens\BoardLens;
@@ -256,3 +258,29 @@ class LensBarUser extends AuthUser
 
     protected $guarded = [];
 }
+
+it('gives every card page its columns: the manifest a card page draws from carries label, value and forecast as list columns', function () {
+    $manifest = $this->actingAs($this->board)->getJson('/frame/manifest');
+    $manifest->assertOk();
+
+    $cards = collect(app(BoardCardRegistry::class)->definitions())->map(fn (BoardCardDefinition $card): string => $card->resourceKey())->values();
+    expect($cards)->toContain('exec-revenue', 'exec-mrr-trend', 'exec-posture')
+        ->and(collect($manifest->json('resources'))->pluck('key')->intersect($cards)->count())->toBe($cards->count());
+
+    foreach ($cards as $key) {
+        $byNode = $manifest->json("contexts.{$key}.byNode") ?? [];
+        $columns = collect($byNode)
+            ->filter(fn (array $contexts, string $node): bool => $node !== '' && ($contexts['list-column']['participates'] ?? false))
+            ->sortBy(fn (array $contexts): int => $contexts['list-column']['sort'] ?? PHP_INT_MAX)
+            ->map(fn (array $contexts): ?string => $contexts['list-column']['label'] ?? null);
+
+        expect($columns->all())->toBe(['label' => 'Figure', 'value' => 'Value', 'forecast' => 'Forecast'], "{$key} draws no columns");
+    }
+
+    // The rows the page draws carry every column's cell.
+    nextLensRequest();
+    $rows = $this->actingAs($this->board)->getJson('/frame/resources/exec-revenue');
+    $rows->assertOk();
+    $first = $rows->json('data.0');
+    expect($first)->toHaveKeys(['id', 'label', 'value', 'forecast']);
+});

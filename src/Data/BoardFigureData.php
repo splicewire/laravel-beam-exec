@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Exec\Data;
 
+use Schemastud\Frame\Attributes\Column;
 use Schemastud\Frame\Data\SummaryFigureData;
 use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -29,6 +30,11 @@ use Splicewire\Beam\Exec\Board\Figures;
  * that draws a measured month under a projecting lens, null when no month is projected. It is the one flag that
  * reaches frame's summary figure, where a series widget (`trend-card`) draws a forecast period dashed. Null is not
  * sent there at all, so a summary under any other lens keeps the bytes it had.
+ *
+ * The card's own page is frame's list of these rows, and frame draws a list's cells only for the properties that
+ * participate in `list-column`. So `label`, `value` and `forecast` are declared columns, and every card's page draws
+ * them, because every card resource reads this one class. `id` is the row key, not a cell. The two watermark flags
+ * are not columns: the watermark's leading row says the same thing in words on every page it marks.
  */
 #[TypeScript]
 class BoardFigureData extends BeamData
@@ -48,10 +54,13 @@ class BoardFigureData extends BeamData
      */
     public function __construct(
         public string $id,
+        #[Column(label: 'Figure', sort: 0)]
         public string $label,
+        #[Column(label: 'Value', sort: 1)]
         public int|float|string $value,
         public ?string $tone = null,
         public bool $synthesized = false,
+        #[Column(label: 'Forecast', sort: 2)]
         public ?bool $forecast = null,
         public bool $projected = false,
     ) {}
