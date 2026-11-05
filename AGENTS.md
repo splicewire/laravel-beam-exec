@@ -20,10 +20,12 @@ Beam tier, MIT.
   at boot as an imperative particle resource `exec-{key}` (realm `exec`, section `board`) with an
   INSTANCE backing, `BoardCardBacking`, carrying its key, and `BoardCardSummaryProvider`. Read Data:
   `BoardFigureData`. The reference card is `TenantsCard`.
-- The built-in metric cards (`src/Board/Cards/`): `TenantsCard`, `GrowthCard`, `PlanMixCard`,
-  `UsageCard`, `PostureCard` and `RiskCard`. `BoardSource` reads `asOf()`, `tenants()`, `subscriptions()`,
-  `usage($month)` and `posture()`; the value objects are `BoardTenant`, `BoardSubscription` and `BoardUsage`, and
-  `Figures` holds the shared rate arithmetic. Every read is narrowed to the tenant set, so a card never filters by lens.
+- The built-in metric cards (`src/Board/Cards/`): `TenantsCard`, `RevenueCard`, `GrowthCard`,
+  `PlanMixCard`, `UsageCard`, `PostureCard` and `RiskCard`. `BoardSource` reads `asOf()`, `tenants()`,
+  `subscriptions()`, `usage($month)`, `revenue($months)` (beam-commerce `PartyPeriodRevenue` rows; the card
+  aggregates them with beam-commerce's pure `RevenueMovements`, never its own arithmetic) and `posture()`;
+  the value objects are `BoardTenant`, `BoardSubscription` and `BoardUsage`, and `Figures` holds the
+  shared rate arithmetic. Every read is narrowed to the tenant set, so a card never filters by lens.
 - The posture registry (`src/Posture/`, `src/Concerns/WiresPosture.php`): `beam.exec.posture`
   (`PostureRegistry`, filled from config, key => `PostureContributor` class), read by
   `LiveBoardSource::posture()`. The default `doctor` contributor runs `beam.doctor.audits` through
@@ -33,7 +35,6 @@ Beam tier, MIT.
 What lands next, in the exec-board build order (the plan is the exec-board map in the ecosystem
 scratch tracker):
 
-- The revenue card (MRR and churn).
 - `BoardLens`, resolved per request, which rebinds `BoardSource` (Truth, Scenario, Projection).
 
 ## Rules that are easy to get backwards

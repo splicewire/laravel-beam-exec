@@ -27,7 +27,7 @@ function riskTenant(string $id, string $status = 'active', bool $suspended = fal
 it('registers the posture and risk cards on the board after the headcount', function () {
     $particles = app(ParticleResourceRegistry::class);
 
-    expect(app(BoardCardRegistry::class)->cardKeys())->toBe(['tenants', 'growth', 'plan-mix', 'usage', 'posture', 'risk'])
+    expect(app(BoardCardRegistry::class)->cardKeys())->toBe(['tenants', 'revenue', 'growth', 'plan-mix', 'usage', 'posture', 'risk'])
         ->and($particles->keysForRealm('exec'))->toContain('exec-posture', 'exec-risk')
         ->and($particles->get('exec-posture')->section)->toBe('board')
         ->and($particles->get('exec-posture')->navOrder)->toBe(40)

@@ -261,3 +261,48 @@ it('feeds the plan-mix and usage cards from the live tables', function () {
 
     CarbonImmutable::setTestNow();
 });
+
+it('reads the revenue ledger for the tenants it sees, priced by the plan in force each month', function () {
+    Schema::create('bills', function (Blueprint $table) {
+        $table->uuid('id')->primary();
+        $table->string('party_id');
+        $table->string('party_type');
+        $table->uuid('subscription_id')->nullable();
+        $table->string('billing_period');
+        $table->string('status');
+        $table->json('line_items')->nullable();
+        $table->decimal('total_usd', 12, 6)->default(0);
+        $table->timestamp('finalized_at')->nullable();
+        $table->string('stripe_invoice_id')->nullable();
+        $table->timestamps();
+    });
+    foreach (['pro' => [100.0, 80.0], 'starter' => [20.0, 15.0]] as $slug => [$monthly, $annual]) {
+        DB::table('plans')->where('slug', $slug)->update(['settings' => json_encode(['components' => [
+            ['type' => 'SubscriptionFee', 'config' => ['monthly_price' => $monthly, 'annual_monthly_price' => $annual]],
+        ]])]);
+    }
+    DB::table('bills')->insert(['id' => 'b1', 'party_id' => 'acme', 'party_type' => (new Tenant)->getMorphClass(), 'billing_period' => '2026-01', 'status' => 'paid', 'total_usd' => 80]);
+
+    $rows = fn (LiveBoardSource $source) => collect($source->revenue(['2025-12', '2026-01']))
+        ->mapWithKeys(fn ($r) => ["{$r->partyId} {$r->period}" => [$r->planKey, $r->recurringUsd, $r->billedUsd, $r->paidUsd]])
+        ->sortKeys()->all();
+
+    expect($rows(LiveBoardSource::live()))->toBe([
+        'acme 2025-12' => ['pro', 80.0, null, null],          // annual commitment
+        'acme 2026-01' => ['pro', 80.0, 80.0, 80.0],          // billed and paid, live only
+        'demo-orrowby 2025-12' => ['pro', 100.0, null, null],
+        'demo-orrowby 2026-01' => ['pro', 100.0, null, null],
+        'globex 2025-12' => ['starter', 20.0, null, null],    // ended 2025-12-31: no January row
+    ])
+        ->and(array_keys($rows(LiveBoardSource::truth())))->toBe(['acme 2025-12', 'acme 2026-01', 'globex 2025-12']);
+
+    $source = LiveBoardSource::live();
+    $queries = 0;
+    $source->revenue(['2025-12', '2026-01']);
+    DB::listen(function () use (&$queries): void {
+        $queries++;
+    });
+    $source->revenue(['2025-12', '2026-01']);
+
+    expect($queries)->toBe(0); // memoized for the request
+});

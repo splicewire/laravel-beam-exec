@@ -63,5 +63,7 @@ What needs attention now, counted from signals the board already has: suspended 
 provisioning, and failing posture checks. A count, not a forecast; warnings are not risks.
 
 **MRR**:
-Contracted recurring revenue: subscription fees plus per-seat fees over measured seats. Usage revenue
-is a separate figure. Billed and paid amounts reconcile in the Live lens only.
+Contracted recurring revenue: subscription fees plus per-seat and per-Brokered-Tenant fees over the
+seats and children measured that month (beam-commerce owns the term and its arithmetic,
+`RevenueMovements`). Usage revenue is a separate figure. Billed and paid amounts reconcile in the
+Live lens only.

@@ -7,6 +7,7 @@
 use Splicewire\Beam\Exec\Board\Cards\GrowthCard;
 use Splicewire\Beam\Exec\Board\Cards\PlanMixCard;
 use Splicewire\Beam\Exec\Board\Cards\PostureCard;
+use Splicewire\Beam\Exec\Board\Cards\RevenueCard;
 use Splicewire\Beam\Exec\Board\Cards\RiskCard;
 use Splicewire\Beam\Exec\Board\Cards\TenantsCard;
 use Splicewire\Beam\Exec\Board\Cards\UsageCard;
@@ -19,6 +20,7 @@ return [
     // this package's built-in cards; a host that declares its own list replaces it, so list them too to keep them.
     'cards' => [
         TenantsCard::class,
+        RevenueCard::class,
         GrowthCard::class,
         PlanMixCard::class,
         UsageCard::class,

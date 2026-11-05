@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Schemastud\Frame\Data\SummaryFigureData;
 use Schemastud\Frame\Data\SummaryResponseData;
+use Splicewire\Beam\Commerce\Revenue\PartyPeriodRevenue;
 use Splicewire\Beam\Exec\BeamExecServiceProvider;
 use Splicewire\Beam\Exec\Board\BoardCardBacking;
 use Splicewire\Beam\Exec\Board\BoardCardRegistry;
@@ -16,6 +17,7 @@ use Splicewire\Beam\Exec\Board\BoardTenant;
 use Splicewire\Beam\Exec\Board\BoardUsage;
 use Splicewire\Beam\Exec\Board\Cards\GrowthCard;
 use Splicewire\Beam\Exec\Board\Cards\PlanMixCard;
+use Splicewire\Beam\Exec\Board\Cards\RevenueCard;
 use Splicewire\Beam\Exec\Board\Cards\TenantsCard;
 use Splicewire\Beam\Exec\Board\Cards\UsageCard;
 use Splicewire\Beam\Exec\Board\Sources\LiveBoardSource;
@@ -55,8 +57,9 @@ function boardTenant(string $id, string $status = 'active', bool $synthetic = fa
 it('reads the built-in cards from config under the card key their attribute declares', function () {
     $cards = app(BoardCardRegistry::class);
 
-    expect($cards->cardKeys())->toBe(['tenants', 'growth', 'plan-mix', 'usage', 'posture', 'risk'])
+    expect($cards->cardKeys())->toBe(['tenants', 'revenue', 'growth', 'plan-mix', 'usage', 'posture', 'risk'])
         ->and($cards->resolve('tenants'))->toBe(TenantsCard::class)
+        ->and($cards->resolve('revenue'))->toBe(RevenueCard::class)
         ->and($cards->resolve('growth'))->toBe(GrowthCard::class)
         ->and($cards->resolve('plan-mix'))->toBe(PlanMixCard::class)
         ->and($cards->resolve('usage'))->toBe(UsageCard::class)
@@ -191,6 +194,11 @@ it('measures every registered card with zero queries against an in-memory source
             new BoardUsage('a', '2026-07', 'openai.tokens', 1.0, 900),
             new BoardUsage('c', '2026-08', 'storage.gb', 0.4, 2),
         ],
+        revenue: [
+            new PartyPeriodRevenue('a', '2026-07', 'pro', 99.0),
+            new PartyPeriodRevenue('a', '2026-08', 'pro', 120.0, usageUsd: 4.5),
+            new PartyPeriodRevenue('b', '2026-08', 'starter', 29.0),
+        ],
         posture: [PostureSignal::pass('a', 'clean'), PostureSignal::warn('b', 'drift'), PostureSignal::fail('c', 'broken')],
     );
     $cards = app(BoardCardRegistry::class);
@@ -206,7 +214,7 @@ it('measures every registered card with zero queries against an in-memory source
         expect($figures)->not->toBe([])->each->toBeInstanceOf(BoardFigureData::class);
     }
 
-    expect(count($cards->definitions()))->toBeGreaterThanOrEqual(4)
+    expect(count($cards->definitions()))->toBeGreaterThanOrEqual(5)
         ->and($queries)->toBe(0);
 });
 

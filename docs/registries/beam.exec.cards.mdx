@@ -33,7 +33,7 @@ same figures.
 ## Who fills it
 
 This package registers its built-in cards through its own config default: **Tenants** (the
-headcount), **Growth** (how fast the tenant base grows), **Plan mix** (who holds which plan) and
+headcount), **Revenue** (MRR, ARR and how they moved), **Growth** (how fast the tenant base grows), **Plan mix** (who holds which plan) and
 **Usage** (what metered usage costs the platform). A host lists the cards it wants in
 `config('beam.exec.cards')`, as a list of classes:
 
@@ -41,6 +41,7 @@ headcount), **Growth** (how fast the tenant base grows), **Plan mix** (who holds
 // config/beam/exec.php
 'cards' => [
     \Splicewire\Beam\Exec\Board\Cards\TenantsCard::class,
+    \Splicewire\Beam\Exec\Board\Cards\RevenueCard::class,
     \Splicewire\Beam\Exec\Board\Cards\GrowthCard::class,
     \Splicewire\Beam\Exec\Board\Cards\PlanMixCard::class,
     \Splicewire\Beam\Exec\Board\Cards\UsageCard::class,
@@ -108,6 +109,9 @@ handed, never from a model, the database or config. A source offers:
   whether it is synthetic);
 - `subscriptions()`: their plan subscriptions, ended ones included, with plan, window and terms;
 - `usage('2026-08')`: one month's metered usage, by tenant and meter, at provider cost;
+- `revenue(['2026-07', '2026-08'])`: each paying tenant's revenue for those months. Turn it into MRR
+  and churn with beam-commerce's `RevenueMovements::from()`, as the Revenue card does, rather than
+  summing it yourself;
 - `asOf()`: the instant the board reads as of. "This month" is this instant's month, not today's.
 
 Every read is already narrowed to the tenants the source sees, so a card never filters for itself.

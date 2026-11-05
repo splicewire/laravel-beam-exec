@@ -3,6 +3,8 @@
 namespace Splicewire\Beam\Exec\Board;
 
 use Carbon\CarbonImmutable;
+use Splicewire\Beam\Commerce\Revenue\PartyPeriodRevenue;
+use Splicewire\Beam\Commerce\Revenue\RevenueMovements;
 use Splicewire\Beam\Exec\Board\Sources\LiveBoardSource;
 use Splicewire\Beam\Exec\Posture\PostureRegistry;
 use Splicewire\Beam\Exec\Posture\PostureSignal;
@@ -54,6 +56,17 @@ interface BoardSource
      * @return list<BoardUsage>
      */
     public function usage(string $month): array;
+
+    /**
+     * Each billing party's revenue in each of `$months` (`YYYY-MM`): a row per party and month with a plan in force,
+     * the shape every ledger shares, so the board's revenue figures come from beam-commerce's one aggregator
+     * ({@see RevenueMovements}) whatever the source. Only parties among {@see tenants()} appear. A month after the
+     * as-of month has no rows.
+     *
+     * @param  list<string>  $months
+     * @return list<PartyPeriodRevenue>
+     */
+    public function revenue(array $months): array;
 
     /**
      * How the estate stands: every signal from every posture contributor ({@see PostureRegistry}), each stamped with

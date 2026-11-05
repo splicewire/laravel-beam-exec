@@ -5,6 +5,8 @@ namespace Splicewire\Beam\Exec\Board\Sources;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Splicewire\Beam\Commerce\CentralUsageSummary;
+use Splicewire\Beam\Commerce\Revenue\MeasuredRevenueLedger;
+use Splicewire\Beam\Commerce\Revenue\PartyPeriodRevenue;
 use Splicewire\Beam\Commerce\Subscription;
 use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\BoardSubscription;
@@ -50,6 +52,9 @@ final class LiveBoardSource implements BoardSource
 
     /** @var list<PostureSignal>|null */
     private ?array $posture = null;
+
+    /** @var array<string, list<PartyPeriodRevenue>> */
+    private array $revenue = [];
 
     /** @var list<BoardSubscription>|null */
     private ?array $subscriptions = null;
@@ -184,6 +189,17 @@ final class LiveBoardSource implements BoardSource
             fn (array $row): BoardUsage => new BoardUsage($row['tenant'], $month, $row['meter'], $row['cost'], $row['quantity']),
             $rows,
         ));
+    }
+
+    /**
+     * The live revenue ledger, for the tenants this source sees: measured from the central tables and priced by the
+     * pricer billing composes through. Billed and paid amounts are filled, because the live estate has bills.
+     */
+    public function revenue(array $months): array
+    {
+        $key = implode(',', $months);
+
+        return $this->revenue[$key] ??= app(MeasuredRevenueLedger::class)->read($months, array_keys($this->visibleTenantIds()));
     }
 
     /** @return array<string, true> */
