@@ -9,10 +9,11 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Splicewire\Beam\Exec\Concerns\WiresBoardCards;
 use Splicewire\Beam\Exec\Concerns\WiresExecRealm;
+use Splicewire\Beam\Exec\Concerns\WiresPosture;
 use Splicewire\Beam\Exec\Console\MakeBoardCardCommand;
 
 /**
- * The exec realm, its board dashboard and the board's cards.
+ * The exec realm, its board dashboard, the board's cards and the posture they count.
  *
  * Each concern this package wires arrives as a `Wires*` trait whose methods carry
  * `#[Chained('register')]` or `#[Chained('boot')]` with a declared `order:`, the beam-ux shape. Adding
@@ -28,6 +29,7 @@ class BeamExecServiceProvider extends PackageServiceProvider implements ChainsTr
     use ScopesRegistrant;
     use WiresBoardCards;
     use WiresExecRealm;
+    use WiresPosture;
 
     protected function registrant(): string
     {

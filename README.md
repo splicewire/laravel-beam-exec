@@ -67,6 +67,23 @@ A card reads **only** through the source it is handed. The package binds `LiveBo
 reads the live estate centrally, synthetic tenants included; the lens will swap it. The full guide is
 the registry page, [`docs/registries/beam.exec.cards.mdx`](docs/registries/beam.exec.cards.mdx).
 
+The built-in cards are **Tenants** (headcount), **Posture** (the worst status any posture check
+reports, and how many pass, warn, fail or measured nothing) and **Risk** (suspended tenants, failed
+provisioning and failing checks, summed).
+
+## Posture
+
+The posture and risk cards count signals from the posture contributors in `beam.exec.posture`. The
+default, `doctor`, runs the readiness audits registered for `splicewire:beam:doctor` and reports each
+finding as one signal, cached for `beam.exec.doctor_posture_ttl` seconds (900). A package adds its own
+contributor from its provider, naming the registry only by its class string:
+
+```php
+$this->app->afterResolving(PostureRegistry::class, fn (PostureRegistry $posture) => $posture->register('ledger', LedgerPosture::class));
+```
+
+The guide is [`docs/registries/beam.exec.posture.mdx`](docs/registries/beam.exec.posture.mdx).
+
 ## Who sees the board
 
 The realm is gated by `entitlement:exec.view`. With `splicewire/laravel-beam-accounts`' default resolver,
@@ -92,10 +109,13 @@ key by key.
 
 ## Registries
 
-This package declares one registry:
+This package declares two registries:
 
 - [`beam.exec.cards`](docs/registries/beam.exec.cards.mdx): the board's cards, `key => BoardMetric`
   class, filled from `config('beam.exec.cards')`. Duplicate keys are rejected.
+- [`beam.exec.posture`](docs/registries/beam.exec.posture.mdx): the posture contributors,
+  `key => PostureContributor` class, filled from `config('beam.exec.posture')` and from other packages'
+  providers. Duplicate keys are rejected.
 
 It registers into:
 

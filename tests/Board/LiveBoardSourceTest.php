@@ -3,7 +3,9 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Splicewire\Beam\Doctor\BeamDoctorManifest;
 use Splicewire\Beam\Exec\Board\BoardTenant;
+use Splicewire\Beam\Exec\Board\Cards\RiskCard;
 use Splicewire\Beam\Exec\Board\Cards\TenantsCard;
 use Splicewire\Beam\Exec\Board\Sources\LiveBoardSource;
 use Splicewire\Beam\Tenancy\Tenant;
@@ -45,7 +47,7 @@ beforeEach(function () {
 });
 
 it('reads every tenant from the central table, synthetic ones included', function () {
-    $tenants = (new LiveBoardSource)->tenants();
+    $tenants = app(LiveBoardSource::class)->tenants();
     $byId = collect($tenants)->keyBy('id');
 
     expect($tenants)->each->toBeInstanceOf(BoardTenant::class)
@@ -60,7 +62,7 @@ it('reads every tenant from the central table, synthetic ones included', functio
 });
 
 it('reads the roster once per source, however many cards ask', function () {
-    $source = new LiveBoardSource;
+    $source = app(LiveBoardSource::class);
     $queries = 0;
 
     DB::listen(function () use (&$queries) {
@@ -74,7 +76,15 @@ it('reads the roster once per source, however many cards ask', function () {
 });
 
 it('feeds the tenants card the live headcount', function () {
-    $figures = collect((new TenantsCard)->measure(new LiveBoardSource))->pluck('value', 'id')->all();
+    $figures = collect((new TenantsCard)->measure(app(LiveBoardSource::class)))->pluck('value', 'id')->all();
 
     expect($figures)->toBe(['total' => 4, 'active' => 2, 'new' => 1, 'synthetic' => 1]);
+});
+
+it('feeds the risk card the live suspensions, with an empty doctor manifest adding no failing check', function () {
+    app()->instance(BeamDoctorManifest::class, new BeamDoctorManifest);
+
+    $figures = collect((new RiskCard)->measure(app(LiveBoardSource::class)))->pluck('value', 'id')->all();
+
+    expect($figures)->toBe(['open' => 1, 'suspended' => 1, 'failed-provisioning' => 0, 'failing-checks' => 0]);
 });

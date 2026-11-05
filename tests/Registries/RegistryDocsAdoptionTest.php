@@ -14,5 +14,5 @@ it('documents every declared registry root with its facts in step', function () 
     $report = RegistryDocsCheck::forPackage(dirname(__DIR__, 2))->run();
 
     expect($report->failures())->toBe([], $report->summary())
-        ->and(array_keys($report->coverage))->toEqualCanonicalizing(['beam.exec.cards']);
+        ->and(array_keys($report->coverage))->toEqualCanonicalizing(['beam.exec.cards', 'beam.exec.posture']);
 });

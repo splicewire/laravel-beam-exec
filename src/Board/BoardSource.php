@@ -3,6 +3,8 @@
 namespace Splicewire\Beam\Exec\Board;
 
 use Splicewire\Beam\Exec\Board\Sources\LiveBoardSource;
+use Splicewire\Beam\Exec\Posture\PostureRegistry;
+use Splicewire\Beam\Exec\Posture\PostureSignal;
 
 /**
  * Everything a board card may read. Cards ({@see BoardMetric}) are handed one and read nothing else.
@@ -26,4 +28,12 @@ interface BoardSource
      * @return list<BoardTenant>
      */
     public function tenants(): array;
+
+    /**
+     * How the estate stands: every signal from every posture contributor ({@see PostureRegistry}), each stamped with
+     * the key of the contributor that produced it, in contributor order.
+     *
+     * @return list<PostureSignal>
+     */
+    public function posture(): array;
 }

@@ -15,6 +15,7 @@ use Splicewire\Beam\Exec\Board\BoardTenant;
 use Splicewire\Beam\Exec\Board\Cards\TenantsCard;
 use Splicewire\Beam\Exec\Board\Sources\LiveBoardSource;
 use Splicewire\Beam\Exec\Data\BoardFigureData;
+use Splicewire\Beam\Exec\Posture\PostureSignal;
 use Splicewire\Beam\Exec\Tests\Support\BadKeyCard;
 use Splicewire\Beam\Exec\Tests\Support\DashboardKeyCard;
 use Splicewire\Beam\Exec\Tests\Support\DuplicateTenantsCard;
@@ -49,7 +50,7 @@ function boardTenant(string $id, string $status = 'active', bool $synthetic = fa
 it('reads the built-in cards from config under the card key their attribute declares', function () {
     $cards = app(BoardCardRegistry::class);
 
-    expect($cards->cardKeys())->toBe(['tenants'])
+    expect($cards->cardKeys())->toBe(['tenants', 'posture', 'risk'])
         ->and($cards->resolve('tenants'))->toBe(TenantsCard::class)
         ->and($cards->registrantOf('tenants'))->toBe('config:beam.exec.cards');
 });
@@ -169,7 +170,10 @@ it('binds one live source per request scope', function () {
  * once they are registered.
  */
 it('measures every registered card with zero queries against an in-memory source', function () {
-    $source = new InMemoryBoardSource([boardTenant('a'), boardTenant('b', synthetic: true)]);
+    $source = new InMemoryBoardSource(
+        [boardTenant('a'), boardTenant('b', synthetic: true), boardTenant('c', status: 'failed', suspended: true)],
+        [PostureSignal::pass('a', 'clean'), PostureSignal::warn('b', 'drift'), PostureSignal::fail('c', 'broken')],
+    );
     $cards = app(BoardCardRegistry::class);
     $queries = 0;
 

@@ -1,0 +1,121 @@
+---
+title: Board posture
+segment: beam.exec.posture
+nav_order: 100
+excerpt: Where the board's posture and risk cards get their pass, warn and fail signals.
+---
+
+# Board posture
+
+`beam.exec.posture` holds the **posture contributors**: the sources the board asks how the estate
+stands. Each contributor returns a list of signals, and each signal is a named check with a status
+of pass, warn or fail and a sentence saying why. Two cards on the board count them: **Posture**
+shows the worst status and how many checks pass, warn and fail, and **Risk** adds the failing
+checks to the suspended tenants and failed provisioning it already sees.
+
+Out of the box there is one contributor, `doctor`: the readiness audits your host and its packages
+register for `splicewire:beam:doctor`. Every finding those audits report becomes one signal, with
+its status unchanged. An installed package that knows something the doctor does not, such as
+whether subscribers have met their compliance requirements, adds its own contributor next to it.
+
+{/* registry-facts:start — generated from the #[IsRegistry] declaration; regenerate it, do not edit between these markers. */}
+
+- **Root:** `beam.exec.posture`
+- **Entries:** `class-string<Splicewire\Beam\Exec\Posture\PostureContributor>`
+- **Duplicate keys:** Reject — registering a taken key throws
+- **Population:** Optional — an empty registry is normal
+- **Order:** `100` (display order, ascending)
+- **Declared by:** `Splicewire\Beam\Exec\Posture\PostureRegistry`
+
+{/* registry-facts:end */}
+
+<RegistryRegistrants root="beam.exec.posture" />
+
+## Who fills it
+
+The exec package registers `doctor` through its config default. A host lists its contributors in
+`config('beam.exec.posture')`, as a map of key to class:
+
+```php
+// config/beam/exec.php
+'posture' => [
+    'doctor' => \Splicewire\Beam\Exec\Posture\Contributors\DoctorPostureContributor::class,
+    'ledger' => \App\Board\LedgerPosture::class,
+],
+```
+
+A map you declare replaces the default, so keep `doctor` in it if you want the readiness audits on
+the board.
+
+A package contributes from its own service provider. Register when the registry is first built,
+naming it only by its class string, so a host that does not install the exec package pays nothing:
+
+```php
+use Splicewire\Beam\Exec\Posture\PostureRegistry;
+
+public function register(): void
+{
+    $this->app->afterResolving(PostureRegistry::class, function (PostureRegistry $posture) {
+        if (! $posture->has('ledger')) {
+            $posture->register('ledger', LedgerPosture::class);
+        }
+    });
+}
+```
+
+The dependency points from your package down to exec. Exec never names a contributor it does not
+ship.
+
+## Writing a contributor
+
+A contributor implements `PostureContributor` and returns its signals:
+
+```php
+use Splicewire\Beam\Exec\Posture\PostureContributor;
+use Splicewire\Beam\Exec\Posture\PostureSignal;
+
+final class LedgerPosture implements PostureContributor
+{
+    public function signals(): array
+    {
+        $orphans = LedgerEntry::query()->whereNull('account_id')->count();
+
+        return [
+            $orphans === 0
+                ? PostureSignal::pass('ledger.orphans', 'Every entry names an account.')
+                : PostureSignal::fail('ledger.orphans', "{$orphans} entries name no account."),
+        ];
+    }
+}
+```
+
+- **`pass`**, **`warn`** and **`fail`** are the doctor's own three words. A doctor `Finding`
+  converts with `PostureSignal::fromFinding()`.
+- **`unmeasured`** is for a check that had nothing to look at: no rows yet, or a sweep that has
+  never run. It is counted as unmeasured, never as passing, so an empty estate does not read as a
+  clean one.
+- Leave the signal's source empty. The board stamps each signal with the key its contributor is
+  registered under.
+
+A contributor is resolved from the container and may read the database. It runs on a board
+request, so keep it cheap or cache it. The doctor contributor caches its run for
+`beam.exec.doctor_posture_ttl` seconds (900 by default; 0 turns the cache off). A contributor that
+throws shows on the board as one failing `contributor-errored` signal, and every other contributor
+still reports.
+
+Cards never call a contributor. They read `posture()` on the board source they are handed, which
+is how a synthesized scenario can show its own posture without touching the database.
+
+The [**duplicate-key policy**](/beam/docs/foundations/registries#key-policies) is **reject**: two
+contributors under one key would silently drop a source of posture from the board. To stand one
+contributor in for another, configure it under that key instead.
+
+## Going deeper
+
+The source is
+[`PostureRegistry`](https://github.com/splicewire/laravel-beam-exec/blob/main/src/Posture/PostureRegistry.php).
+The contract is
+[`PostureContributor`](https://github.com/splicewire/laravel-beam-exec/blob/main/src/Posture/PostureContributor.php),
+and the default is
+[`DoctorPostureContributor`](https://github.com/splicewire/laravel-beam-exec/blob/main/src/Posture/Contributors/DoctorPostureContributor.php).
+The cards that count the signals are listed in [Board cards](beam.exec.cards).

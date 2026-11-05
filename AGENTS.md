@@ -18,14 +18,18 @@ Beam tier, MIT.
   (bound scoped to `LiveBoardSource`), and `splicewire:beam:exec:make-card`. Each card is registered
   at boot as an imperative particle resource `exec-{key}` (realm `exec`, section `board`) with an
   INSTANCE backing, `BoardCardBacking`, carrying its key, and `BoardCardSummaryProvider`. Read Data:
-  `BoardFigureData`. The reference card is `TenantsCard`.
+  `BoardFigureData`. The reference card is `TenantsCard`; `PostureCard` and `RiskCard` are built in.
+- The posture registry (`src/Posture/`, `src/Concerns/WiresPosture.php`): `beam.exec.posture`
+  (`PostureRegistry`, filled from config, key => `PostureContributor` class), read by
+  `LiveBoardSource::posture()`. The default `doctor` contributor runs `beam.doctor.audits` through
+  the doctor's runner (a gate failure's report is read, not thrown) and caches it for
+  `beam.exec.doctor_posture_ttl`. Packages contribute DOWN with `afterResolving(PostureRegistry::class, …)`.
 
 What lands next, in the exec-board build order (the plan is the exec-board map in the ecosystem
 scratch tracker):
 
-- The board metrics: growth, usage, plan mix, revenue (MRR and churn) and risk.
-- The posture registry (`beam.exec.posture`), with a doctor-backed default. Tower contributes its
-  own posture signal from the tower side.
+- The board metrics: growth, usage, plan mix, and revenue (MRR and churn).
+- Tower's own posture contributor, registered from the tower side.
 - `BoardLens`, resolved per request, which rebinds `BoardSource` (Truth, Scenario, Projection).
 
 ## Rules that are easy to get backwards

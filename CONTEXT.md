@@ -34,8 +34,16 @@ The sticky bar and per-card note, "Synthesized — not real data", on every figu
 Projection lens produces. It cannot be configured off.
 
 **Posture**:
-The board's risk read, gathered through the `beam.exec.posture` registry. The default contributor is
-doctor-backed; higher tiers such as tower contribute their own signals into it.
+How the estate stands, as a list of **posture signals** (`PostureSignal`: a check, pass / warn /
+fail in the doctor's vocabulary, a detail, and whether it measured anything). Gathered from the
+contributors in the `beam.exec.posture` registry and read by cards only through
+`BoardSource::posture()`. The default contributor is doctor-backed; higher tiers such as tower
+contribute their own signals into it.
+_Avoid_: health (a liveness word), score (posture is counted, never weighted)
+
+**Risk**:
+What needs attention now, counted from signals the board already has: suspended tenants, failed
+provisioning, and failing posture checks. A count, not a forecast; warnings are not risks.
 
 **MRR**:
 Contracted recurring revenue: subscription fees plus per-seat fees over measured seats. Usage revenue

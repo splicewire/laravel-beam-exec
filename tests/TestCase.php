@@ -5,6 +5,7 @@ namespace Splicewire\Beam\Exec\Tests;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Rushing\DataFilters\ServiceProvider as DataFiltersServiceProvider;
 use Rushing\DataNav\ServiceProvider as DataNavServiceProvider;
+use Rushing\Doctor\ServiceProvider as DoctorServiceProvider;
 use Rushing\PermissionCascade\PermissionCascadeServiceProvider;
 use Rushing\Popcorn\Laravel\PopcornServiceProvider;
 use Rushing\Versioning\VersioningServiceProvider;
@@ -31,6 +32,9 @@ abstract class TestCase extends Orchestra
      *
      * beam-tenancy and frame joined with the board's cards: the live source reads the tenancy `Tenant`, and a
      * card's summary is frame's `SummaryResponseData` drawn through frame's summary-provider contract.
+     *
+     * The doctor's provider joined with the posture registry: the default contributor runs beam's doctor manifest
+     * through the doctor's `DoctorRunner`, which that provider binds.
      */
     protected function getPackageProviders($app): array
     {
@@ -51,6 +55,7 @@ abstract class TestCase extends Orchestra
             PopcornServiceProvider::class,
             DataFiltersServiceProvider::class,
             FrameServiceProvider::class,
+            DoctorServiceProvider::class,
         ];
     }
 }
