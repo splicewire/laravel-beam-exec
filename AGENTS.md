@@ -15,8 +15,7 @@ Beam tier, MIT.
 
 - The card DX (`src/Board/`, `src/Concerns/WiresBoardCards.php`): `#[BoardCard]` on a `BoardMetric`,
   the `beam.exec.cards` registry (`BoardCardRegistry`, filled from config), the `BoardSource` port
-  (bound scoped to `LiveBoardSource::reportable()`: `truth` while beam-tenancy's reporting toggle
-  excludes synthetic tenants, `live` otherwise), and `splicewire:beam:exec:make-card`. Each card is registered
+  (bound scoped through the lens, below), and `splicewire:beam:exec:make-card`. Each card is registered
   at boot as an imperative particle resource `exec-{key}` (realm `exec`, section `board`) with an
   INSTANCE backing, `BoardCardBacking`, carrying its key, and `BoardCardSummaryProvider`. Read Data:
   `BoardFigureData`. The reference card is `TenantsCard`.
@@ -32,10 +31,23 @@ Beam tier, MIT.
   the doctor's runner (a gate failure's report is read, not thrown) and caches it for
   `beam.exec.doctor_posture_ttl`. Packages contribute DOWN with `afterResolving(PostureRegistry::class, …)`.
 
+- The lens (`src/Board/Lens/`): `BoardLens` (Live, Truth or Scenario) is bound scoped, resolved by
+  `BoardLensResolver` from the encrypted `beam_exec_lens` cookie (`live`, `truth`, `scenario` or
+  `scenario:<portfolio>`); an absent or unknown value reads the default, Truth while the reporting
+  toggle excludes synthetic tenants and Live otherwise. The resolver builds the `BoardSource`:
+  `LiveBoardSource::live()`/`truth()`, or `SyntheticBoardSource`, a beam-synthetic portfolio's roster
+  read in memory over the months ending with the as-of month and priced by beam-commerce's `PlanPricer`
+  over a price list (`ScenarioPlan`) read from the host's plans when the source is built. That plans
+  read is the Scenario board's only query; every card read is in memory. Scenario posture is empty.
+- The synthesized watermark (`src/Board/BoardWatermark.php`): `BoardCardRegistry::figures()` measures a
+  card and, when the source's `synthesizedFrom()` is non-null, flags every figure `synthesized` and
+  leads with a `synthesized` figure ("Synthesized — not real data", the scenario's name, tone warn).
+  The card's page and its dashboard summary both read through `figures()`.
+
 What lands next, in the exec-board build order (the plan is the exec-board map in the ecosystem
 scratch tracker):
 
-- `BoardLens`, resolved per request, which rebinds `BoardSource` (Truth, Scenario, Projection).
+- The lens bar (a segmented switch and the undismissable banner), then the Projection lens.
 
 ## Rules that are easy to get backwards
 
@@ -53,7 +65,9 @@ scratch tracker):
   answerable in memory.
 - **A card resource is imperative on purpose.** The backing is an instance carrying the card key; the
   attribute slot is a class-string (particle doctrine). Do not "fix" it into `#[ParticleResource]`.
-- **The synthesized watermark is not configurable.** Any synthesized figure carries it.
+- **The synthesized watermark is not configurable.** Any synthesized figure carries it. It is stamped
+  in `BoardCardRegistry::figures()`, never by a card; measure a card through `figures()`, not
+  `metric()->measure()`, anywhere its figures reach a reader. The figure id `synthesized` is reserved.
 - **The provider never hand-lists steps.** A concern is a `Wires*` trait whose methods carry
   `#[Chained('register')]` or `#[Chained('boot')]` with a declared `order:`. The realm marker is a
   `register` link, because beam-ux's realm-dashboard boot link reads the realm list. `ScopesRegistrant`

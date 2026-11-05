@@ -50,6 +50,6 @@ final class BoardCardBacking implements Unpaged
             return []; // the card left the registry: an honest absence, never an invented zero
         }
 
-        return array_values($cards->metric(BoardCardDefinition::of($class))->measure($container->make(BoardSource::class)));
+        return $cards->figures(BoardCardDefinition::of($class), $container->make(BoardSource::class));
     }
 }

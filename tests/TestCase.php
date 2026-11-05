@@ -17,6 +17,7 @@ use Spatie\LaravelData\LaravelDataServiceProvider;
 use Splicewire\Beam\BeamServiceProvider;
 use Splicewire\Beam\Exec\BeamExecServiceProvider;
 use Splicewire\Beam\Sitemap\BeamSitemapServiceProvider;
+use Splicewire\Beam\Synthetic\BeamSyntheticServiceProvider;
 use Splicewire\Beam\Tenancy\BeamTenancyServiceProvider;
 use Splicewire\Beam\Ux\BeamUxServiceProvider;
 use Splicewire\Beam\Workflows\BeamWorkflowsServiceProvider;
@@ -35,6 +36,9 @@ abstract class TestCase extends Orchestra
      *
      * The doctor's provider joined with the posture registry: the default contributor runs beam's doctor manifest
      * through the doctor's `DoctorRunner`, which that provider binds.
+     *
+     * beam-synthetic's provider joined with the lens: a Scenario lens reads its portfolio and blueprint registries
+     * and its curve expander.
      */
     protected function getPackageProviders($app): array
     {
@@ -56,6 +60,7 @@ abstract class TestCase extends Orchestra
             DataFiltersServiceProvider::class,
             FrameServiceProvider::class,
             DoctorServiceProvider::class,
+            BeamSyntheticServiceProvider::class,
         ];
     }
 

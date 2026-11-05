@@ -11,9 +11,9 @@ use Splicewire\Beam\Exec\Data\BoardFigureData;
  * ## The one rule: read only through the source
  *
  * {@see measure()} is handed a {@see BoardSource} and must read nothing else: no model query, no `DB` call, no
- * config read of a figure. The source is what the board's lens selects (live data today; later the truth, a
- * synthesized scenario or a projection), so a card that reads around it shows live numbers under a "Synthesized"
- * watermark. The package's conformance test measures every registered card against an in-memory source inside
+ * config read of a figure. The source is what the board's lens selects (the estate live or in truth, or a
+ * synthesized scenario), so a card that reads around it shows live numbers under a "Synthesized" watermark. The
+ * package's conformance test measures every registered card against an in-memory source inside
  * `DB::listen` and requires zero queries.
  *
  * A metric is resolved from the container, so it may take collaborators in its constructor, provided none of them

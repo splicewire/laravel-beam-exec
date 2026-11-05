@@ -9,7 +9,10 @@ use Splicewire\Beam\Exec\Board\BoardCardDefinition;
 use Splicewire\Beam\Exec\Board\BoardCardRegistry;
 use Splicewire\Beam\Exec\Board\BoardCardSummaryProvider;
 use Splicewire\Beam\Exec\Board\BoardSource;
+use Splicewire\Beam\Exec\Board\Lens\BoardLens;
+use Splicewire\Beam\Exec\Board\Lens\BoardLensResolver;
 use Splicewire\Beam\Exec\Board\Sources\LiveBoardSource;
+use Splicewire\Beam\Exec\Board\Sources\SyntheticBoardSource;
 use Splicewire\Beam\Exec\Data\BoardFigureData;
 use Splicewire\Beam\Exec\Realm\ExecRealm;
 use Splicewire\Beam\Particle\ParticleResource;
@@ -24,10 +27,12 @@ use Splicewire\Beam\Particle\ParticleResourceRegistry;
  * instance the boot link reads. Its config entries (`beam.exec.cards`, a list of card classes) are added in the
  * factory, under the registrant `config:beam.exec.cards`.
  *
- * {@see BoardSource} is bound SCOPED: one source per request (or per job), so a memoized read is never served to the
- * next request. The package binds {@see LiveBoardSource::reportable()}: the live reading, or the truth while
- * beam-tenancy's reporting toggle excludes synthetic tenants (read when the request first asks, so a flip needs no
- * redeploy). Whatever selects the board's lens rebinds it.
+ * {@see BoardLens} and {@see BoardSource} are bound SCOPED: one lens and one source per request (or per job), so a
+ * memoized read, or one request's lens, is never served to the next. {@see BoardLensResolver} reads the lens from the
+ * request's `beam_exec_lens` cookie and builds its source: {@see LiveBoardSource} for Live and Truth,
+ * {@see SyntheticBoardSource} for a Scenario. Without a valid cookie the lens is the default, which is the truth
+ * while beam-tenancy's reporting toggle excludes synthetic tenants and live otherwise (read when the request first
+ * asks, so a flip needs no redeploy).
  *
  * ## Boot phase: one resource per card
  *
@@ -55,7 +60,11 @@ trait WiresBoardCards
             return $registry;
         });
 
-        $this->app->scoped(BoardSource::class, fn (): BoardSource => LiveBoardSource::reportable());
+        $this->app->scoped(BoardLens::class, fn ($app): BoardLens => $app->make(BoardLensResolver::class)
+            ->resolve($app->bound('request') ? $app->make('request') : null));
+
+        $this->app->scoped(BoardSource::class, fn ($app): BoardSource => $app->make(BoardLensResolver::class)
+            ->source($app->make(BoardLens::class)));
     }
 
     #[Chained('boot', order: 20)]

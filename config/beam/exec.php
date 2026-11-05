@@ -35,6 +35,11 @@ return [
         'doctor' => DoctorPostureContributor::class,
     ],
 
+    // The portfolio a Scenario lens reads when the lens cookie names none (`scenario` rather than
+    // `scenario:<id>`): a portfolio id from beam-synthetic's PortfolioRegistry (`beam.synthetic.portfolios`).
+    // null reads the first portfolio the host declares.
+    'scenario_portfolio' => null,
+
     // Seconds the doctor-backed posture is cached for: it runs every registered readiness audit, on a board request.
     // 0 runs them afresh on every read.
     'doctor_posture_ttl' => 900,

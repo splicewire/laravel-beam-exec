@@ -101,6 +101,7 @@ final class PipelineCard implements BoardMetric
 
 `measure()` returns the card's figures in display order, and the first one is its headline. Each
 figure's `tone` is one of `default`, `active`, `busy`, `warn` or `danger`, or null for none.
+The figure id `synthesized` is reserved for the watermark (below).
 
 **Read only through the source.** Everything a card shows comes from the `BoardSource` it is
 handed, never from a model, the database or config. A source offers:
@@ -115,11 +116,15 @@ handed, never from a model, the database or config. A source offers:
 - `asOf()`: the instant the board reads as of. "This month" is this instant's month, not today's.
 
 Every read is already narrowed to the tenants the source sees, so a card never filters for itself.
-The source is what the board is currently reading: the live estate, synthetic tenants included, or
-the truth without them (the board reads the truth while the reporting toggle in beam-tenancy
-excludes synthetic tenants), and later a synthesized scenario or a projection. A card that reads around the source would show live numbers under a "Synthesized"
-banner. This package's test suite measures every registered card against an in-memory source and
-fails on a single query.
+The source is what the board's lens is reading: the live estate, synthetic tenants included; the
+truth without them (the default while the reporting toggle in beam-tenancy excludes synthetic
+tenants); or a synthesized scenario, a synthetic portfolio read in memory. A card that reads around
+the source would show live numbers under a "Synthesized" watermark. This package's test suite
+measures every registered card against an in-memory source, and under a Scenario, and fails on a
+single query.
+
+Under a scenario the watermark is added for you: every figure is flagged `synthesized`, and the card
+leads with a "Synthesized — not real data" figure. A card never adds it and cannot leave it off.
 
 A card is resolved from the container, so it can take its own dependencies in its constructor, as
 long as none of them is a way round the source.

@@ -31,7 +31,7 @@ final class BoardCardSummaryProvider implements ResourceSummaryProvider
             return null;
         }
 
-        $figures = $this->cards->metric($definition)->measure($this->source);
+        $figures = $this->cards->figures($definition, $this->source);
 
         if ($figures === []) {
             return null;

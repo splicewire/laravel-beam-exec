@@ -29,6 +29,7 @@ final class InMemoryBoardSource implements BoardSource
         ?CarbonImmutable $asOf = null,
         private readonly array $revenue = [],
         private readonly array $posture = [],
+        private readonly ?string $synthesizedFrom = null,
     ) {
         $this->asOf = $asOf ?? CarbonImmutable::parse('2026-08-20 12:00:00');
     }
@@ -36,6 +37,11 @@ final class InMemoryBoardSource implements BoardSource
     public function lens(): string
     {
         return 'test';
+    }
+
+    public function synthesizedFrom(): ?string
+    {
+        return $this->synthesizedFrom;
     }
 
     public function asOf(): CarbonImmutable

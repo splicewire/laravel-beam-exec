@@ -13,6 +13,7 @@ use Rushing\Popcorn\Registries\PopulationRequirement;
 use Rushing\Popcorn\Registries\Registry;
 use Rushing\Popcorn\Registries\RegistryKey;
 use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
+use Splicewire\Beam\Exec\Data\BoardFigureData;
 
 /**
  * The board's cards, keyed by card key: each entry is the class-string of a {@see BoardMetric} declared with
@@ -113,6 +114,18 @@ class BoardCardRegistry implements Gated, Registry
     public function metric(BoardCardDefinition $definition): BoardMetric
     {
         return $this->container->make($definition->class);
+    }
+
+    /**
+     * A card's figures from `$source`: what its metric measures, with the synthesized watermark stamped on when the
+     * source is synthesized ({@see BoardWatermark}). The card's page and its dashboard summary both read through
+     * here, so neither can show a synthesized figure unmarked.
+     *
+     * @return list<BoardFigureData>
+     */
+    public function figures(BoardCardDefinition $definition, BoardSource $source): array
+    {
+        return BoardWatermark::stamp($this->metric($definition)->measure($source), $source, $definition->key());
     }
 
     public function has(RegistryKey|string $key): bool

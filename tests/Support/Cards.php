@@ -86,3 +86,12 @@ final class GatedCard implements BoardMetric
         return [new BoardFigureData(id: 'n', label: 'N', value: 1)];
     }
 }
+
+#[BoardCard(key: 'reserved', label: 'Reserved', icon: 'Ban', order: 98)]
+final class ReservedFigureCard implements BoardMetric
+{
+    public function measure(BoardSource $source): array
+    {
+        return [new BoardFigureData(id: 'synthesized', label: 'Mine', value: 1)];
+    }
+}

@@ -12,6 +12,7 @@ use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\BoardSubscription;
 use Splicewire\Beam\Exec\Board\BoardTenant;
 use Splicewire\Beam\Exec\Board\BoardUsage;
+use Splicewire\Beam\Exec\Board\Lens\BoardLensResolver;
 use Splicewire\Beam\Exec\Posture\PostureRegistry;
 use Splicewire\Beam\Exec\Posture\PostureSignal;
 use Splicewire\Beam\Tenancy\Synthetic\SyntheticReporting;
@@ -27,8 +28,9 @@ use Throwable;
  *    beam-tenancy's `reportable()` applies while the reporting toggle excludes synthetic tenants.
  *
  * {@see reportable()} picks between them the way `Tenant::reportable()` does: truth while
- * {@see SyntheticReporting::excludes()} is true, live otherwise. It is the package's default binding, so flipping the
- * toggle moves the board to the truth on the next request, with no redeploy.
+ * {@see SyntheticReporting::excludes()} is true, live otherwise. It is the reading a board gets when no lens is
+ * chosen ({@see BoardLensResolver::default()}), so flipping the toggle moves an unlensed board to the truth on the
+ * next request, with no redeploy.
  *
  * Every read is central and goes through the tenant set: a subscription or a usage row whose tenant this source does
  * not see is dropped, so a truth board never counts a synthetic tenant's plan or spend.
@@ -86,6 +88,12 @@ final class LiveBoardSource implements BoardSource
     public function lens(): string
     {
         return $this->truth ? 'truth' : 'live';
+    }
+
+    /** The estate is never synthesized, even where it holds materialized synthetic tenants: they are rows. */
+    public function synthesizedFrom(): ?string
+    {
+        return null;
     }
 
     public function asOf(): CarbonImmutable
