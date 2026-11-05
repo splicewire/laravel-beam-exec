@@ -7,6 +7,7 @@ use Splicewire\Beam\Commerce\Revenue\PartyPeriodRevenue;
 use Splicewire\Beam\Commerce\Revenue\RevenueMovements;
 use Splicewire\Beam\Exec\Board\Lens\BoardLensResolver;
 use Splicewire\Beam\Exec\Board\Sources\LiveBoardSource;
+use Splicewire\Beam\Exec\Board\Sources\ProjectionBoardSource;
 use Splicewire\Beam\Exec\Board\Sources\SyntheticBoardSource;
 use Splicewire\Beam\Exec\Posture\PostureRegistry;
 use Splicewire\Beam\Exec\Posture\PostureSignal;
@@ -19,8 +20,8 @@ use Splicewire\Beam\Exec\Posture\PostureSignal;
  * which source a request reads (the board's lens) binds it in the container; cards never choose.
  *
  * The board's lens ({@see BoardLensResolver}) binds {@see LiveBoardSource}, central reads of the estate reading
- * `live` (synthetic tenants included) or `truth` (real tenants only), or {@see SyntheticBoardSource}, a synthetic
- * portfolio read in memory. The read surface grows with the metrics that need it; every method must be answerable
+ * `live` (synthetic tenants included) or `truth` (real tenants only), {@see SyntheticBoardSource}, a synthetic
+ * portfolio read in memory, or {@see ProjectionBoardSource}, the default reading's revenue run forward. The read surface grows with the metrics that need it; every method must be answerable
  * without a database by an in-memory source, because a synthesized scenario is one.
  *
  * Every read is already narrowed to the tenants {@see tenants()} returns: a subscription or a usage row of a tenant
@@ -30,7 +31,8 @@ interface BoardSource
 {
     /**
      * Which reading this source is: `live` or `truth` for {@see LiveBoardSource}, `scenario` for
-     * {@see SyntheticBoardSource}. A card may print it; it must not branch on it.
+     * {@see SyntheticBoardSource}, `projection` for {@see ProjectionBoardSource}. A card may print it; it must not
+     * branch on it.
      */
     public function lens(): string;
 
@@ -42,6 +44,16 @@ interface BoardSource
      * it off.
      */
     public function synthesizedFrom(): ?string;
+
+    /**
+     * What this source projects, or null when every month it answers is measured (or synthesized).
+     *
+     * A non-null answer puts the projected watermark ({@see BoardWatermark}) on every figure every card draws from
+     * this source, and the card registry measures only the cards that declare they project
+     * ({@see Attributes\BoardCard::$projects}). A card that draws a month marks its figure a forecast when
+     * {@see BoardProjection::forecasts()} says that month is projected ({@see Figures::forecast()}).
+     */
+    public function projection(): ?BoardProjection;
 
     /**
      * The moment the board reads as of. "This month" on a card is the month of this instant, never the wall clock,

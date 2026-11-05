@@ -95,3 +95,13 @@ final class ReservedFigureCard implements BoardMetric
         return [new BoardFigureData(id: 'synthesized', label: 'Mine', value: 1)];
     }
 }
+
+/** Takes the projected watermark's id. */
+#[BoardCard(key: 'projected-id', label: 'Projected id')]
+final class ProjectedIdCard implements BoardMetric
+{
+    public function measure(BoardSource $source): array
+    {
+        return [new BoardFigureData(id: 'projected', label: 'Mine', value: 1)];
+    }
+}

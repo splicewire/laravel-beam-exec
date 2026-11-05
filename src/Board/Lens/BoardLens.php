@@ -12,8 +12,10 @@ use Splicewire\Beam\Exec\Board\BoardSource;
  * "view as" cookie has, and its value is checked against a closed vocabulary. A missing, unreadable or unknown value
  * is not an error: it reads as the default lens ({@see $chosen} false).
  *
- * The cookie value is the mode, and for a scenario the portfolio id after a colon: `live`, `truth`, `scenario`, or
- * `scenario:demo-mixed-book`. A bare `scenario` reads the host's default portfolio.
+ * The cookie value is the mode, and for a scenario or a projection the portfolio id after a colon: `live`, `truth`,
+ * `scenario`, `scenario:demo-mixed-book`, `projection` or `projection:demo-mixed-book`. A bare `scenario` reads the
+ * host's default portfolio. A projection's portfolio supplies only its churn and expansion rates; a bare
+ * `projection` reads the rates `beam.exec.projection` configures.
  */
 final class BoardLens
 {
@@ -24,7 +26,8 @@ final class BoardLens
     public const COOKIE_MINUTES = 480;
 
     /**
-     * @param  string|null  $portfolio  the scenario portfolio id; set only for {@see BoardLensMode::Scenario}
+     * @param  string|null  $portfolio  the portfolio id; set only for {@see BoardLensMode::Scenario} (the book it reads)
+     *                                  and {@see BoardLensMode::Projection} (the rates it projects at)
      * @param  bool  $chosen  whether a valid cookie chose this lens (false = the default)
      */
     public function __construct(
@@ -48,6 +51,11 @@ final class BoardLens
         return new self(BoardLensMode::Scenario, $portfolio, $chosen);
     }
 
+    public static function projection(?string $portfolio = null, bool $chosen = false): self
+    {
+        return new self(BoardLensMode::Projection, $portfolio, $chosen);
+    }
+
     /**
      * Read a cookie value. Null for anything outside the vocabulary: an empty value, an unknown mode, a portfolio
      * on a mode that takes none, or a portfolio id that is not kebab-case.
@@ -65,7 +73,7 @@ final class BoardLens
             return null;
         }
 
-        if ($portfolio !== null && ($mode !== BoardLensMode::Scenario || preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $portfolio) !== 1)) {
+        if ($portfolio !== null && (! $mode->takesPortfolio() || preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $portfolio) !== 1)) {
             return null;
         }
 
@@ -81,5 +89,10 @@ final class BoardLens
     public function synthesizes(): bool
     {
         return $this->mode->synthesizes();
+    }
+
+    public function projects(): bool
+    {
+        return $this->mode->projects();
     }
 }

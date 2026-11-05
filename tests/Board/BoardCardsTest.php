@@ -16,6 +16,7 @@ use Splicewire\Beam\Exec\Board\BoardSubscription;
 use Splicewire\Beam\Exec\Board\BoardTenant;
 use Splicewire\Beam\Exec\Board\BoardUsage;
 use Splicewire\Beam\Exec\Board\Cards\GrowthCard;
+use Splicewire\Beam\Exec\Board\Cards\MrrTrendCard;
 use Splicewire\Beam\Exec\Board\Cards\PlanMixCard;
 use Splicewire\Beam\Exec\Board\Cards\RevenueCard;
 use Splicewire\Beam\Exec\Board\Cards\TenantsCard;
@@ -57,9 +58,10 @@ function boardTenant(string $id, string $status = 'active', bool $synthetic = fa
 it('reads the built-in cards from config under the card key their attribute declares', function () {
     $cards = app(BoardCardRegistry::class);
 
-    expect($cards->cardKeys())->toBe(['tenants', 'revenue', 'growth', 'plan-mix', 'usage', 'posture', 'risk'])
+    expect($cards->cardKeys())->toBe(['tenants', 'revenue', 'mrr-trend', 'growth', 'plan-mix', 'usage', 'posture', 'risk'])
         ->and($cards->resolve('tenants'))->toBe(TenantsCard::class)
         ->and($cards->resolve('revenue'))->toBe(RevenueCard::class)
+        ->and($cards->resolve('mrr-trend'))->toBe(MrrTrendCard::class)
         ->and($cards->resolve('growth'))->toBe(GrowthCard::class)
         ->and($cards->resolve('plan-mix'))->toBe(PlanMixCard::class)
         ->and($cards->resolve('usage'))->toBe(UsageCard::class)

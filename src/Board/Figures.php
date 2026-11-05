@@ -54,4 +54,13 @@ final class Figures
     {
         return $at->startOfMonth()->subMonth()->format('Y-m');
     }
+
+    /**
+     * A figure's forecast flag for `$month` (`YYYY-MM`): true when `$source` projects that month, false when it
+     * projects but that month is measured, null when it projects nothing (so the flag is not sent at all).
+     */
+    public static function forecast(BoardSource $source, string $month): ?bool
+    {
+        return $source->projection()?->forecasts($month);
+    }
 }

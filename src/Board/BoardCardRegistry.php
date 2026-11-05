@@ -117,14 +117,21 @@ class BoardCardRegistry implements Gated, Registry
     }
 
     /**
-     * A card's figures from `$source`: what its metric measures, with the synthesized watermark stamped on when the
-     * source is synthesized ({@see BoardWatermark}). The card's page and its dashboard summary both read through
-     * here, so neither can show a synthesized figure unmarked.
+     * A card's figures from `$source`: what its metric measures, with the synthesized or projected watermark stamped
+     * on when the source is not a reading of the estate ({@see BoardWatermark}). The card's page and its dashboard
+     * summary both read through here, so neither can show such a figure unmarked.
+     *
+     * Under a projecting source a card that does not declare `projects` measures nothing: it is absent from the
+     * board, not drawn from present-day facts under a forecast.
      *
      * @return list<BoardFigureData>
      */
     public function figures(BoardCardDefinition $definition, BoardSource $source): array
     {
+        if ($source->projection() !== null && ! $definition->card->projects) {
+            return [];
+        }
+
         return BoardWatermark::stamp($this->metric($definition)->measure($source), $source, $definition->key());
     }
 

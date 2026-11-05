@@ -6,9 +6,9 @@ only, a synthetic scenario, or a projection forward from today.
 
 This release adds the `exec` realm, its gate and its dashboard, and the board's cards: a way to
 declare one (`#[BoardCard]` on a `BoardMetric`), the `beam.exec.cards` registry, the `make-card`
-generator, the built-in cards **Tenants**, **Revenue**, **Growth**, **Plan mix**, **Usage**, **Posture**
-and **Risk**, and the board's lens: **Live**, **Truth** or a synthetic **Scenario**. The lens bar and
-the Projection lens follow.
+generator, the built-in cards **Tenants**, **Revenue**, **MRR trend**, **Growth**, **Plan mix**, **Usage**,
+**Posture** and **Risk**, and the board's lens: **Live**, **Truth**, a synthetic **Scenario** or a revenue
+**Projection**. The lens bar follows.
 
 ## Install
 
@@ -76,6 +76,12 @@ usage revenue is its own figure. The live read is linear in tenants × months (b
 gives the measured cost), so a large book will want it cached. The full guide is
 the registry page, [`docs/registries/beam.exec.cards.mdx`](docs/registries/beam.exec.cards.mdx).
 
+The **MRR trend** card (`exec-mrr-trend`) is the same thirteen months as a line: one figure per month, its
+value the month's MRR as a plain number. It chooses `@schemastud/frame`'s `trend-card` widget with
+`#[WidgetIn('summary', 'trend-card')]` on its class, and under the Projection lens the projected months are
+drawn dashed. The widget ships in `@schemastud/frame` 0.3.0; on an older frame the card shows frame's
+"unbound widget" marker instead.
+
 The built-in cards are **Tenants** (headcount), **Posture** (the worst status any posture check
 reports, and how many pass, warn, fail or measured nothing) and **Risk** (suspended tenants, failed
 provisioning and failing checks, summed).
@@ -102,6 +108,7 @@ Each request reads the board through one lens, chosen by the `beam_exec_lens` co
 | `live` | Live | the central tables, synthetic tenants included |
 | `truth` | Truth | the central tables, real tenants only |
 | `scenario`, `scenario:<portfolio>` | Scenario | a beam-synthetic portfolio, in memory |
+| `projection`, `projection:<portfolio>` | Projection | the default reading's revenue, run forward in memory |
 
 Without a cookie, or with one the board does not recognise (an unknown mode, a portfolio the host does not
 declare), the board reads its default: **Truth** while beam-tenancy's reporting toggle excludes synthetic
@@ -127,6 +134,36 @@ Every figure under a Scenario is **watermarked**, and the watermark cannot be tu
 is the scenario's name. The watermark is in the data, so a renderer that knows nothing of lenses still prints it
 on every card.
 
+**Projection** takes the board's default reading (Truth while the toggle excludes synthetic tenants, Live
+otherwise), reads its revenue for the last closed month and the twelve before it, once, and hands the last closed
+month to beam-synthetic's projection engine as the baseline: each party's month held flat, then run forward at
+`beam.exec.projection`'s rates for `horizon_months` (6) months. Every card read after that one revenue read is in
+memory. "This month" becomes the last projected month, so the Revenue card describes where the book lands and the
+MRR trend card draws the measured months up to the anchor and the projected ones after it.
+
+```php
+// config/beam/exec.php
+'projection' => [
+    'horizon_months' => 12,
+    'churn_rate' => 0.02,          // monthly; parties leave whole
+    'expansion_rate' => 0.01,
+    'growth_rate' => 0.03,         // new paying parties per paying party per month
+    'price_changes' => [['period' => '2027-01', 'rate' => 0.10, 'plan' => 'starter']],
+],
+```
+
+A cookie `projection:<portfolio>` (or `beam.exec.projection.portfolio`) takes the churn and expansion rates from a
+beam-synthetic portfolio where it states them. A price change at or before the anchor is skipped, because the
+anchor's prices already include it.
+
+A projection models revenue and nothing else, so only the cards that declare `projects: true` on their
+`#[BoardCard]` (Revenue and MRR trend) are drawn; every other card is absent under it. Each figure for a projected
+month carries `forecast: true`, and each figure for a measured month `forecast: false`; the flag reaches the
+dashboard's summary figures, where `trend-card` dashes the forecast. Every figure is also **watermarked as
+projected**: `projected: true`, and a leading `projected` figure, "Projected — not real data", whose value says
+what was projected ("Live, October 2026 held flat, 6 months ahead"). A projection starts from real revenue, so it
+is not marked synthesized, and it is never unmarked either.
+
 ## Who sees the board
 
 The realm is gated by `entitlement:exec.view`. With `splicewire/laravel-beam-accounts`' default resolver,
@@ -150,7 +187,8 @@ The realm profile is written for you in `beam.core.realms.exec`:
 Declare `beam.core.realms.exec` in your own `config/beam/core.php` to change any of those keys; yours win
 key by key.
 
-The lens's default portfolio is `beam.exec.scenario_portfolio` (above).
+The lens's default portfolio is `beam.exec.scenario_portfolio`, and the Projection lens's horizon and rates are
+`beam.exec.projection` (both above).
 
 ## Registries
 

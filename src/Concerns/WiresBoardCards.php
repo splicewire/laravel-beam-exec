@@ -3,8 +3,10 @@
 namespace Splicewire\Beam\Exec\Concerns;
 
 use Rushing\Popcorn\Concerns\Chained;
+use Schemastud\Frame\Contracts\ResourceContextContributor;
 use Splicewire\Beam\Exec\BeamExecServiceProvider;
 use Splicewire\Beam\Exec\Board\BoardCardBacking;
+use Splicewire\Beam\Exec\Board\BoardCardContextNodes;
 use Splicewire\Beam\Exec\Board\BoardCardDefinition;
 use Splicewire\Beam\Exec\Board\BoardCardRegistry;
 use Splicewire\Beam\Exec\Board\BoardCardSummaryProvider;
@@ -12,6 +14,7 @@ use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\Lens\BoardLens;
 use Splicewire\Beam\Exec\Board\Lens\BoardLensResolver;
 use Splicewire\Beam\Exec\Board\Sources\LiveBoardSource;
+use Splicewire\Beam\Exec\Board\Sources\ProjectionBoardSource;
 use Splicewire\Beam\Exec\Board\Sources\SyntheticBoardSource;
 use Splicewire\Beam\Exec\Data\BoardFigureData;
 use Splicewire\Beam\Exec\Realm\ExecRealm;
@@ -30,9 +33,13 @@ use Splicewire\Beam\Particle\ParticleResourceRegistry;
  * {@see BoardLens} and {@see BoardSource} are bound SCOPED: one lens and one source per request (or per job), so a
  * memoized read, or one request's lens, is never served to the next. {@see BoardLensResolver} reads the lens from the
  * request's `beam_exec_lens` cookie and builds its source: {@see LiveBoardSource} for Live and Truth,
- * {@see SyntheticBoardSource} for a Scenario. Without a valid cookie the lens is the default, which is the truth
+ * {@see SyntheticBoardSource} for a Scenario, {@see ProjectionBoardSource} over the default reading for a Projection. Without a valid cookie the lens is the default, which is the truth
  * while beam-tenancy's reporting toggle excludes synthetic tenants and live otherwise (read when the request first
  * asks, so a flip needs no redeploy).
+ *
+ * frame's {@see ResourceContextContributor} port is decorated with {@see BoardCardContextNodes}, so a card's own
+ * class-level `#[WidgetIn('summary', …)]` reaches its resource's render contexts (every card shares one record class,
+ * so the class cannot carry a per-card widget).
  *
  * ## Boot phase: one resource per card
  *
@@ -65,6 +72,11 @@ trait WiresBoardCards
 
         $this->app->scoped(BoardSource::class, fn ($app): BoardSource => $app->make(BoardLensResolver::class)
             ->source($app->make(BoardLens::class)));
+
+        $this->app->extend(ResourceContextContributor::class, fn (ResourceContextContributor $inner, $app): ResourceContextContributor => new BoardCardContextNodes(
+            $inner,
+            $app->make(BoardCardRegistry::class),
+        ));
     }
 
     #[Chained('boot', order: 20)]

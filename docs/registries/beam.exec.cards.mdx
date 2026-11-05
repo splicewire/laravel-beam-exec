@@ -98,10 +98,24 @@ final class PipelineCard implements BoardMetric
   Board section.
 - **`ability`** gates one card more tightly than the board. Leave it out and the card reads under
   the board's own gate, `entitlement:exec.view`.
+- **`projects`** says the card reads nothing but revenue, so it is drawn under the Projection lens
+  too. Leave it out and the card is absent under a projection rather than showing today's numbers
+  under a forecast.
 
 `measure()` returns the card's figures in display order, and the first one is its headline. Each
 figure's `tone` is one of `default`, `active`, `busy`, `warn` or `danger`, or null for none.
-The figure id `synthesized` is reserved for the watermark (below).
+The figure ids `synthesized` and `projected` are reserved for the watermarks (below).
+
+A card picks its dashboard widget with frame's class-level attribute on the card class itself. The
+built-in MRR trend card draws its figures, one per month, as a line:
+
+```php
+#[BoardCard(key: 'mrr-trend', label: 'MRR trend', icon: 'TrendingUp', order: 16, projects: true)]
+#[WidgetIn('summary', 'trend-card')]
+final class MrrTrendCard implements BoardMetric { … }
+```
+
+For `trend-card`, send each period's value as a plain number: a formatted amount is a gap in the line.
 
 **Read only through the source.** Everything a card shows comes from the `BoardSource` it is
 handed, never from a model, the database or config. A source offers:
@@ -118,13 +132,23 @@ handed, never from a model, the database or config. A source offers:
 Every read is already narrowed to the tenants the source sees, so a card never filters for itself.
 The source is what the board's lens is reading: the live estate, synthetic tenants included; the
 truth without them (the default while the reporting toggle in beam-tenancy excludes synthetic
-tenants); or a synthesized scenario, a synthetic portfolio read in memory. A card that reads around
-the source would show live numbers under a "Synthesized" watermark. This package's test suite
-measures every registered card against an in-memory source, and under a Scenario, and fails on a
-single query.
+tenants); a synthesized scenario, a synthetic portfolio read in memory; or a projection, the default
+reading's revenue run forward. A card that reads around the source would show live numbers under a
+"Synthesized" or "Projected" watermark. This package's test suite measures every registered card
+against an in-memory source, under a Scenario and under a Projection, and fails on a single query.
 
 Under a scenario the watermark is added for you: every figure is flagged `synthesized`, and the card
-leads with a "Synthesized — not real data" figure. A card never adds it and cannot leave it off.
+leads with a "Synthesized — not real data" figure. Under a projection every figure is flagged
+`projected` and the card leads with "Projected — not real data". A card never adds either and cannot
+leave it off. What a projecting card does set is `forecast`, per month, so a series can tell the
+projected months from the measured ones:
+
+```php
+new BoardFigureData(id: $month, label: $name, value: $mrr, forecast: Figures::forecast($source, $month));
+```
+
+`Figures::forecast()` is true for a month after the projection's anchor, false for one up to it, and
+null when nothing is projected, in which case the dashboard figure carries no `forecast` at all.
 
 A card is resolved from the container, so it can take its own dependencies in its constructor, as
 long as none of them is a way round the source.

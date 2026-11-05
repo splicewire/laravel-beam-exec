@@ -1,7 +1,6 @@
 # Beam Exec
 
-The exec realm and its board dashboard. The terms below are the ones this package owns; the
-Projection lens gains its code in a later exec-board ticket.
+The exec realm and its board dashboard. The terms below are the ones this package owns.
 
 ## Language
 
@@ -45,7 +44,9 @@ markup a plan charges on it. Revenue from usage is a separate figure.
 - **Truth**: real tenants only, and the default once the reporting toggle is on;
 - **Scenario**: a synthetic portfolio, read in memory: every card read issues zero queries (the
   plans it is priced by are read once, when its source is built). It has no posture;
-- **Projection**: a live baseline at an anchor month, carried forward (not built yet).
+- **Projection**: the default reading's revenue at the anchor month, held flat per party and run
+  forward by beam-synthetic's projection engine. One revenue read when its source is built, then
+  every card read in memory. It models revenue only: only cards that declare `projects` are drawn.
 Chosen by the encrypted `beam_exec_lens` cookie; an absent or unknown value reads the default.
 
 **Scenario price list**:
@@ -53,10 +54,26 @@ The host's plans a Scenario is priced by (`ScenarioPlan`: slug, name, billing co
 from the plan catalog when the scenario's source is built, so pricing a scenario month reads no row.
 
 **Synthesized watermark**:
-The sticky bar and per-card note, "Synthesized — not real data", on every figure a Scenario or
-Projection lens produces. It cannot be configured off. In the data it is a `synthesized` flag on every
+The sticky bar and per-card note, "Synthesized — not real data", on every figure a Scenario lens
+produces. It cannot be configured off. In the data it is a `synthesized` flag on every
 figure and a leading `synthesized` figure on every card (`BoardWatermark`), stamped by the card
 registry, never by a card. The sticky bar is the lens bar's.
+
+**Projected watermark**:
+The Projection lens's mark, "Projected — not real data", kept distinct from the synthesized one: a
+projection starts from real revenue, but it is not a measurement. A `projected` flag on every figure
+and a leading `projected` figure saying what was projected, stamped the same way.
+
+**Anchor month**:
+The last month a projection reads rather than projects: the last closed month before the as-of
+instant. Its rows are the **baseline**.
+
+**Forecast**:
+A figure that draws a projected month (`forecast: true`), as opposed to one that draws a measured
+month under a projection (`false`). Set by the card, per month; it is the one projection flag frame's
+summary figure carries, so a series widget can dash the forecast.
+_Avoid_: prediction, estimate (a projection holds the anchor flat and applies stated rates; it fits
+nothing)
 
 **Posture**:
 How the estate stands, as a list of **posture signals** (`PostureSignal`: a check, pass / warn /

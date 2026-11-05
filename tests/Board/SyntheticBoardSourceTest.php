@@ -69,7 +69,7 @@ it('builds a Scenario board from the host\'s price list in one plans read, then 
             ->and($figures[0]->value)->toBe('Demo mixed book');
     }
 
-    expect(array_keys($drawn))->toBe(['tenants', 'revenue', 'growth', 'plan-mix', 'usage', 'posture', 'risk'])
+    expect(array_keys($drawn))->toBe(['tenants', 'revenue', 'mrr-trend', 'growth', 'plan-mix', 'usage', 'posture', 'risk'])
         ->and($queries)->toBe([]);
 });
 
@@ -181,7 +181,7 @@ it('refuses to price a scenario whose plan the host does not have, naming it, ra
 
 it('reports no posture: a scenario models customers, not the estate', function () {
     $source = scenarioSource();
-    $posture = app(BoardCardRegistry::class)->figures(app(BoardCardRegistry::class)->definitions()[5], $source);
+    $posture = app(BoardCardRegistry::class)->figures(app(BoardCardRegistry::class)->definitions()[6], $source);
 
     expect($source->posture())->toBe([])
         ->and(array_map(fn (BoardFigureData $f): array => [$f->id, $f->value], $posture))->toBe([

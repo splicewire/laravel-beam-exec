@@ -73,7 +73,8 @@ it('reads the cookie\'s closed vocabulary, and nothing outside it', function (mi
     'truth' => ['truth', 'truth'],
     'scenario' => ['scenario', 'scenario'],
     'a named scenario' => ['scenario:demo-mixed-book', 'scenario:demo-mixed-book'],
-    'projection (not yet a lens)' => ['projection', null],
+    'projection' => ['projection', 'projection'],
+    'a projection at a portfolio\'s rates' => ['projection:demo-mixed-book', 'projection:demo-mixed-book'],
     'a portfolio on live' => ['live:demo-mixed-book', null],
     'a portfolio that is not kebab-case' => ['scenario:Demo Book', null],
     'empty' => ['', null],
@@ -123,8 +124,8 @@ it('switches the bound source when the lens cookie changes, through the host\'s 
     app()->forgetScopedInstances();
     $scenario = $this->withCookie(BoardLens::COOKIE, 'scenario:demo-mixed-book')->get('/_lens-probe');
 
-    // Seven cards, every one measured with zero queries and led by the watermark.
-    $scenario->assertExactJson(['lens' => 'scenario', 'class' => 'SyntheticBoardSource', 'chosen' => true, 'queries' => 0, 'watermarked' => 7]);
+    // Eight cards, every one measured with zero queries and led by the watermark.
+    $scenario->assertExactJson(['lens' => 'scenario', 'class' => 'SyntheticBoardSource', 'chosen' => true, 'queries' => 0, 'watermarked' => 8]);
 
     app()->forgetScopedInstances();
     $this->withCookie(BoardLens::COOKIE, 'truth')->get('/_lens-probe')->assertJson(['lens' => 'truth', 'class' => 'LiveBoardSource', 'chosen' => true]);

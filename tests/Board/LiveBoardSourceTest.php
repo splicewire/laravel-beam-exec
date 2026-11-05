@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Splicewire\Beam\Doctor\BeamDoctorManifest;
+use Splicewire\Beam\Exec\Board\BoardCardRegistry;
 use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\BoardSubscription;
 use Splicewire\Beam\Exec\Board\BoardTenant;
@@ -14,7 +15,10 @@ use Splicewire\Beam\Exec\Board\Cards\PlanMixCard;
 use Splicewire\Beam\Exec\Board\Cards\RiskCard;
 use Splicewire\Beam\Exec\Board\Cards\TenantsCard;
 use Splicewire\Beam\Exec\Board\Cards\UsageCard;
+use Splicewire\Beam\Exec\Board\Lens\BoardLens;
+use Splicewire\Beam\Exec\Board\Lens\BoardLensResolver;
 use Splicewire\Beam\Exec\Board\Sources\LiveBoardSource;
+use Splicewire\Beam\Exec\Board\Sources\ProjectionBoardSource;
 use Splicewire\Beam\Tenancy\Synthetic\SyntheticReporting;
 use Splicewire\Beam\Tenancy\Tenant;
 
@@ -305,4 +309,62 @@ it('reads the revenue ledger for the tenants it sees, priced by the plan in forc
     $source->revenue(['2025-12', '2026-01']);
 
     expect($queries)->toBe(0); // memoized for the request
+});
+
+it('projects the live ledger: its revenue read once at build, then every card answered with zero queries', function () {
+    Schema::create('bills', function (Blueprint $table) {
+        $table->uuid('id')->primary();
+        $table->string('party_id');
+        $table->string('party_type');
+        $table->uuid('subscription_id')->nullable();
+        $table->string('billing_period');
+        $table->string('status');
+        $table->json('line_items')->nullable();
+        $table->decimal('total_usd', 12, 6)->default(0);
+        $table->timestamp('finalized_at')->nullable();
+        $table->string('stripe_invoice_id')->nullable();
+        $table->timestamps();
+    });
+    foreach (['pro' => [100.0, 80.0], 'starter' => [20.0, 15.0]] as $slug => [$monthly, $annual]) {
+        DB::table('plans')->where('slug', $slug)->update(['settings' => json_encode(['components' => [
+            ['type' => 'SubscriptionFee', 'config' => ['monthly_price' => $monthly, 'annual_monthly_price' => $annual]],
+        ]])]);
+    }
+    config(['beam.exec.projection' => ['horizon_months' => 3, 'expansion_rate' => 0.1]]);
+
+    $built = 0;
+    DB::listen(function () use (&$built): void {
+        $built++;
+    });
+
+    // As of 2026-02-10 the anchor is January: acme (annual pro, 80) and demo-orrowby (pro, 100); globex ended in 2025.
+    $source = app(BoardLensResolver::class)->source(BoardLens::projection(), CarbonImmutable::parse('2026-02-10 09:00:00'));
+    $atBuild = $built;
+
+    $cards = app(BoardCardRegistry::class);
+    $drawn = [];
+    foreach ($cards->definitions() as $definition) {
+        $drawn[$definition->key()] = $cards->figures($definition, $source);
+    }
+
+    $trend = collect($drawn['mrr-trend'])->keyBy('id');
+
+    expect($source)->toBeInstanceOf(ProjectionBoardSource::class)
+        ->and($source->projection()->basis)->toBe('live')
+        ->and($source->projection()->anchor)->toBe('2026-01')
+        ->and($source->projection()->through)->toBe('2026-04')
+        ->and($atBuild)->toBeGreaterThan(0)
+        ->and($built - $atBuild)->toBe(0)
+        ->and(array_map('count', $drawn))->toBe(['tenants' => 0, 'revenue' => 13, 'mrr-trend' => 14, 'growth' => 0, 'plan-mix' => 0, 'usage' => 0, 'posture' => 0, 'risk' => 0])
+        ->and([$trend['2026-01']->value, $trend['2026-01']->forecast])->toBe([180.0, false])
+        ->and([$trend['2026-02']->value, $trend['2026-02']->forecast])->toBe([198.0, true])
+        ->and([$trend['2026-04']->value, $trend['2026-04']->forecast])->toBe([239.58, true]);
+
+    // The toggle moves the baseline to the truth: the synthetic tenant leaves it.
+    config(['beam.tenancy.synthetic.exclude_from_reporting' => true]);
+    $truth = app(BoardLensResolver::class)->source(BoardLens::projection(), CarbonImmutable::parse('2026-02-10 09:00:00'));
+
+    expect($truth->projection()->basis)->toBe('truth')
+        ->and(collect($truth->revenue(['2026-01']))->pluck('partyId')->all())->toBe(['acme'])
+        ->and($truth->projection()->describe())->toBe('Truth, January 2026 held flat, 3 months ahead');
 });

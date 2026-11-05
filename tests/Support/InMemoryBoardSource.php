@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Exec\Tests\Support;
 
 use Carbon\CarbonImmutable;
 use Splicewire\Beam\Commerce\Revenue\PartyPeriodRevenue;
+use Splicewire\Beam\Exec\Board\BoardProjection;
 use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\BoardSubscription;
 use Splicewire\Beam\Exec\Board\BoardTenant;
@@ -42,6 +43,11 @@ final class InMemoryBoardSource implements BoardSource
     public function synthesizedFrom(): ?string
     {
         return $this->synthesizedFrom;
+    }
+
+    public function projection(): ?BoardProjection
+    {
+        return null;
     }
 
     public function asOf(): CarbonImmutable

@@ -8,6 +8,7 @@ use Splicewire\Beam\Commerce\CentralUsageSummary;
 use Splicewire\Beam\Commerce\Revenue\MeasuredRevenueLedger;
 use Splicewire\Beam\Commerce\Revenue\PartyPeriodRevenue;
 use Splicewire\Beam\Commerce\Subscription;
+use Splicewire\Beam\Exec\Board\BoardProjection;
 use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\BoardSubscription;
 use Splicewire\Beam\Exec\Board\BoardTenant;
@@ -92,6 +93,12 @@ final class LiveBoardSource implements BoardSource
 
     /** The estate is never synthesized, even where it holds materialized synthetic tenants: they are rows. */
     public function synthesizedFrom(): ?string
+    {
+        return null;
+    }
+
+    /** Every month this source answers is read, not projected. */
+    public function projection(): ?BoardProjection
     {
         return null;
     }

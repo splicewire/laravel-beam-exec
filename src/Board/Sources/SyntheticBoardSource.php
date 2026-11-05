@@ -12,6 +12,7 @@ use Splicewire\Beam\Commerce\Billing\PlanPricer;
 use Splicewire\Beam\Commerce\Revenue\MeasuredRevenueLedger;
 use Splicewire\Beam\Commerce\Revenue\PartyPeriodRevenue;
 use Splicewire\Beam\Commerce\Revenue\RevenueMovements;
+use Splicewire\Beam\Exec\Board\BoardProjection;
 use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\BoardSubscription;
 use Splicewire\Beam\Exec\Board\BoardTenant;
@@ -105,6 +106,12 @@ final class SyntheticBoardSource implements BoardSource
     public function synthesizedFrom(): ?string
     {
         return $this->label;
+    }
+
+    /** Every month this source answers is read, not projected. */
+    public function projection(): ?BoardProjection
+    {
+        return null;
     }
 
     public function asOf(): CarbonImmutable

@@ -22,12 +22,17 @@ use Splicewire\Beam\Exec\Data\BoardFigureData;
  * It reads thirteen months, ending with the month of {@see BoardSource::asOf()}: the opening month is the base of
  * the twelve-month retention, and the months between it and last month tell a returning customer (reactivation) from
  * a new one.
+ *
+ * It projects: under the Projection lens the as-of month is the last projected month, so every figure describes a
+ * projected month and is marked a forecast ({@see Figures::forecast()}); at horizon 0 they describe the anchor and
+ * are marked measured. Its month-by-month MRR is {@see MrrTrendCard}.
  */
 #[BoardCard(
     key: 'revenue',
     label: 'Revenue',
     icon: 'CircleDollarSign',
     order: 15,
+    projects: true,
 )]
 final class RevenueCard implements BoardMetric
 {
@@ -42,8 +47,9 @@ final class RevenueCard implements BoardMetric
         $month = $movements->movement($now);
         $retention = $movements->retention($months[0], $now)->netRevenueRetention();
         $money = fn (float $usd): string => MoneyPresenter::format($usd);
+        $forecast = Figures::forecast($source, $now);
 
-        return [
+        $figures = [
             new BoardFigureData(id: 'mrr', label: 'MRR', value: $money($month->endingMrr), tone: SummaryFigureData::TONE_ACTIVE),
             new BoardFigureData(id: 'arr', label: 'ARR', value: $money($month->arr())),
             new BoardFigureData(
@@ -72,6 +78,14 @@ final class RevenueCard implements BoardMetric
             ),
             new BoardFigureData(id: 'usage-revenue', label: 'Usage revenue this month', value: $money($month->usageUsd)),
         ];
+
+        return $forecast === null ? $figures : array_map(fn (BoardFigureData $figure): BoardFigureData => new BoardFigureData(
+            id: $figure->id,
+            label: $figure->label,
+            value: $figure->value,
+            tone: $figure->tone,
+            forecast: $forecast,
+        ), $figures);
     }
 
     /** @return list<string> the {@see MONTHS} months ending with the as-of month, ascending */
