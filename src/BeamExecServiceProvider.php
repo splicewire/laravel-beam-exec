@@ -7,6 +7,7 @@ use Rushing\Popcorn\Contracts\ChainsTraitMethods as ChainsTraitMethodsContract;
 use Rushing\Popcorn\Registries\ScopesRegistrant;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Splicewire\Beam\Exec\Concerns\WiresExecRealm;
 
 /**
  * The exec realm and its board dashboard.
@@ -23,6 +24,7 @@ class BeamExecServiceProvider extends PackageServiceProvider implements ChainsTr
 {
     use ChainsTraitMethods;
     use ScopesRegistrant;
+    use WiresExecRealm;
 
     protected function registrant(): string
     {

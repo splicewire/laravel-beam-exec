@@ -6,14 +6,16 @@ Beam tier, MIT.
 
 ## What is here now
 
-The scaffold: the service provider, `config/beam/exec.php` (merged under `beam.exec.*`, no keys
-yet), and the testbench and Pest harness. Nothing is registered and no key is read yet.
+- The service provider, `config/beam/exec.php` (merged under `beam.exec.*`, no keys yet), and the
+  testbench and Pest harness (which boots beam and beam-ux for real).
+- The `exec` realm (`src/Realm/ExecRealm.php`, `src/Concerns/WiresExecRealm.php`): a `#[Realm]` marker
+  in `beam.core.realms.classes`, the `beam.core.realms.exec` profile gated by `entitlement:exec.view`, the
+  `exec.view` entitlement key, and the `board` nav seat. beam-ux gives it its dashboard. The host mounts
+  the console with `Route::beamRealmConsole('exec', [...])` (README).
 
-What lands here, in the exec-board build order (the plan is the exec-board map in the ecosystem
+What lands next, in the exec-board build order (the plan is the exec-board map in the ecosystem
 scratch tracker):
 
-- The `exec` realm: a `#[Realm]` marker in `beam.core.realms.classes`, gated by
-  `entitlement:exec.view`, with its dashboard. No beam-ux change is needed for it.
 - The card DX: `#[BoardCard]`, the `BoardMetric` interface, the `beam.exec.cards` registry and
   `make-card`.
 - The board metrics: growth, usage, plan mix, revenue (MRR and churn) and risk.
