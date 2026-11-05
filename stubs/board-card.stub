@@ -1,0 +1,27 @@
+<?php
+
+namespace {{ namespace }};
+
+use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
+use Splicewire\Beam\Exec\Board\BoardMetric;
+use Splicewire\Beam\Exec\Board\BoardSource;
+use Splicewire\Beam\Exec\Data\BoardFigureData;
+
+/**
+ * A card on the board. List this class in `config('beam.exec.cards')` and it is drawn as the `exec-{{ key }}`
+ * resource: a card on `/exec/dashboard` and a leaf in the board section.
+ *
+ * Read only through the source. Everything the card shows must come from `$source`, never from a model, `DB` or
+ * config: the board's lens chooses the source, and a card that reads around it shows live numbers under a
+ * synthesized one.
+ */
+#[BoardCard(key: '{{ key }}', label: '{{ label }}', icon: {{ icon }}, order: {{ order }})]
+final class {{ class }} implements BoardMetric
+{
+    public function measure(BoardSource $source): array
+    {
+        return [
+            new BoardFigureData(id: 'total', label: '{{ label }}', value: count($source->tenants())),
+        ];
+    }
+}

@@ -4,8 +4,10 @@ The exec realm for Beam hosts: a board-meeting dashboard at `/exec`. Its cards w
 revenue, usage and posture, each read through one lens. The lens can be live data, real tenants
 only, a synthetic scenario, or a projection forward from today.
 
-This release adds the `exec` realm, its gate and its dashboard. The cards, the metrics and the lens
-follow.
+This release adds the `exec` realm, its gate and its dashboard, and the board's cards: a way to
+declare one (`#[BoardCard]` on a `BoardMetric`), the `beam.exec.cards` registry, the `make-card`
+generator, and one built-in card, **Tenants**. The growth, revenue, usage, plan-mix, posture and risk
+cards, and the lens, follow.
 
 ## Install
 
@@ -36,6 +38,35 @@ your middleware plus `can:entitlement:exec.view`:
 | `exec.frame.manifest` | `/exec/frame/manifest` | the exec realm's frame manifest |
 | `exec.frame.console` | `/exec/{frameRoute}` | the frame console, for every leaf the realm projects |
 
+## Cards
+
+Each card is a class that measures a few figures through a `BoardSource`:
+
+```php
+#[BoardCard(key: 'pipeline', label: 'Pipeline', icon: 'Funnel', order: 20)]
+final class PipelineCard implements BoardMetric
+{
+    public function measure(BoardSource $source): array
+    {
+        return [new BoardFigureData(id: 'total', label: 'Tenants', value: count($source->tenants()))];
+    }
+}
+```
+
+List it in `config('beam.exec.cards')` (a list you declare replaces the default, so keep
+`TenantsCard::class` in it if you want it), or add it from your provider's `register()` with
+`app(BoardCardRegistry::class)->add(PipelineCard::class)`. `php artisan splicewire:beam:exec:make-card
+PipelineCard` generates one.
+
+Each card becomes a read-only resource, `exec-{key}`, in the `exec` realm, so it shows up three ways
+without more wiring: as a card on `/exec/dashboard`, as a leaf in the Board section, and as its own page
+at `/exec/exec-{key}` listing the same figures. A card reads under the board's gate unless its
+attribute names a narrower `ability`.
+
+A card reads **only** through the source it is handed. The package binds `LiveBoardSource`, which
+reads the live estate centrally, synthetic tenants included; the lens will swap it. The full guide is
+the registry page, [`docs/registries/beam.exec.cards.mdx`](docs/registries/beam.exec.cards.mdx).
+
 ## Who sees the board
 
 The realm is gated by `entitlement:exec.view`. With `splicewire/laravel-beam-accounts`' default resolver,
@@ -61,12 +92,19 @@ key by key.
 
 ## Registries
 
-This package declares no registries yet. It registers into:
+This package declares one registry:
+
+- [`beam.exec.cards`](docs/registries/beam.exec.cards.mdx): the board's cards, `key => BoardMetric`
+  class, filled from `config('beam.exec.cards')`. Duplicate keys are rejected.
+
+It registers into:
 
 - `beam.core.realms.classes` (config): `Splicewire\Beam\Exec\Realm\ExecRealm`, the `#[Realm]` marker,
   which beam registers onto `beam.realm`;
 - `beam.core.entitlements.keys` (config): `exec.view`, so beam defines the `entitlement:exec.view` ability;
-- `beam.nav.sections`: the `board` seat in the `exec` realm, gated on `exec.view`.
+- `beam.nav.sections`: the `board` seat in the `exec` realm, gated on `exec.view`;
+- `beam.particle.resources`: one `exec-{key}` resource per card, in the `exec` realm and the `board`
+  section.
 
 beam-ux registers the realm's dashboard (`exec-dashboard`) into `beam.particle.resources` itself, as it
 does for every realm.

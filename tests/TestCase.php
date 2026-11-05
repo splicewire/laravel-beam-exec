@@ -9,12 +9,14 @@ use Rushing\PermissionCascade\PermissionCascadeServiceProvider;
 use Rushing\Popcorn\Laravel\PopcornServiceProvider;
 use Rushing\Versioning\VersioningServiceProvider;
 use Schemastud\DataSchemas\LaravelDataSchemasServiceProvider;
+use Schemastud\Frame\FrameServiceProvider;
 use Schemastud\JsonNs\Laravel\JsonNsServiceProvider;
 use Spatie\Activitylog\ActivitylogServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 use Splicewire\Beam\BeamServiceProvider;
 use Splicewire\Beam\Exec\BeamExecServiceProvider;
 use Splicewire\Beam\Sitemap\BeamSitemapServiceProvider;
+use Splicewire\Beam\Tenancy\BeamTenancyServiceProvider;
 use Splicewire\Beam\Ux\BeamUxServiceProvider;
 use Splicewire\Beam\Workflows\BeamWorkflowsServiceProvider;
 
@@ -26,11 +28,15 @@ abstract class TestCase extends Orchestra
      * The exec realm concern is the reason: the realm lands in beam's `RealmRegistry` from beam's boot, and its
      * dashboard is registered by beam-ux's boot link 58, so a test of the realm needs both providers really
      * booting. Testbench does not auto-discover; popcorn is listed so `RegistryIndex` is shared.
+     *
+     * beam-tenancy and frame joined with the board's cards: the live source reads the tenancy `Tenant`, and a
+     * card's summary is frame's `SummaryResponseData` drawn through frame's summary-provider contract.
      */
     protected function getPackageProviders($app): array
     {
         return [
             BeamExecServiceProvider::class,
+            BeamTenancyServiceProvider::class,
             BeamUxServiceProvider::class,
             BeamSitemapServiceProvider::class,
             BeamWorkflowsServiceProvider::class,
@@ -44,6 +50,7 @@ abstract class TestCase extends Orchestra
             JsonNsServiceProvider::class,
             PopcornServiceProvider::class,
             DataFiltersServiceProvider::class,
+            FrameServiceProvider::class,
         ];
     }
 }

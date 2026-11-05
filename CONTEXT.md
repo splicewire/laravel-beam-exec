@@ -1,7 +1,7 @@
 # Beam Exec
 
-The exec realm and its board dashboard. The terms below are the ones this package will own; each
-gains its code in a later exec-board ticket.
+The exec realm and its board dashboard. The terms below are the ones this package owns; the lens
+terms gain their code in a later exec-board ticket.
 
 ## Language
 
@@ -11,8 +11,16 @@ composition rule in beam-accounts, not a role this package mints.
 
 **Board card**:
 One dashboard card, declared with `#[BoardCard]` and backed by a `BoardMetric`. A card reads only
-through the lens's `BoardSource`.
+through the lens's `BoardSource`. Each card is drawn as its own read-only resource, `exec-{key}`.
 _Avoid_: widget (the frame JS card set's term for the rendered piece)
+
+**Board figure**:
+One keyed, labelled value a card measures (`BoardFigureData`). The same list is the card's rows on
+its own page and its figures on the dashboard, so the two cannot disagree.
+
+**Board source**:
+`BoardSource`, everything a card may read. Request-scoped; the lens chooses which one is bound.
+Every method must be answerable in memory, because a scenario is one.
 
 **Lens**:
 `BoardLens`, the per-request choice of what the board reads:

@@ -21,6 +21,7 @@
         "illuminate/contracts": "^11.0|^12.0|^13.0",
         "illuminate/support": "^11.0|^12.0|^13.0",
         "rushing/php-popcorn": "dev-main",
+        "schemastud/laravel-frame": "*",
         "spatie/laravel-package-tools": "^1.16",
         "splicewire/laravel-beam": "*",
         "splicewire/laravel-beam-commerce": "*",

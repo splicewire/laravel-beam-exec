@@ -1,0 +1,123 @@
+---
+title: Board cards
+segment: beam.exec.cards
+nav_order: 100
+excerpt: The cards on the board, the exec realm's dashboard.
+---
+
+# Board cards
+
+`beam.exec.cards` holds the cards on the **board**: the dashboard of the `exec` realm at
+`/exec/dashboard`, read by anyone who holds `exec.view` (an operator, or a board seat). Each card
+is one small class that measures a few figures, such as how many tenants there are or how many
+arrived this month.
+
+Every registered card becomes its own read-only resource, `exec-{key}`, in the `exec` realm. That
+gives each card three places on the board with no extra wiring: a card on the dashboard, a leaf in
+the **Board** section of the navigation, and a page of its own at `/exec/exec-{key}` listing the
+same figures.
+
+{/* registry-facts:start — generated from the #[IsRegistry] declaration; regenerate it, do not edit between these markers. */}
+
+- **Root:** `beam.exec.cards`
+- **Entries:** `class-string<Splicewire\Beam\Exec\Board\BoardMetric>`
+- **Duplicate keys:** Reject — registering a taken key throws
+- **Population:** Optional — an empty registry is normal
+- **Order:** `100` (display order, ascending)
+- **Declared by:** `Splicewire\Beam\Exec\Board\BoardCardRegistry`
+
+{/* registry-facts:end */}
+
+<RegistryRegistrants root="beam.exec.cards" />
+
+## Who fills it
+
+This package registers its built-in cards through its own config default. A host lists the cards
+it wants in `config('beam.exec.cards')`, as a list of classes:
+
+```php
+// config/beam/exec.php
+'cards' => [
+    \Splicewire\Beam\Exec\Board\Cards\TenantsCard::class,
+    \App\Board\Cards\PipelineCard::class,
+],
+```
+
+A list you declare replaces the default, so name the built-in cards too if you want to keep them.
+You can also add a card from your own service provider's `register()`:
+
+```php
+use Splicewire\Beam\Exec\Board\BoardCardRegistry;
+
+app(BoardCardRegistry::class)->add(PipelineCard::class);
+```
+
+Add cards in config or in `register()`. The exec package turns cards into resources while it
+boots, which is before your route file mounts the board. A card added from a provider's `boot()`
+still reaches the dashboard, but the board's console may not have a URL for its page.
+
+## Writing a card
+
+Run `artisan splicewire:beam:exec:make-card PipelineCard` to generate one, or write it by hand. A
+card implements `BoardMetric` and carries the `#[BoardCard]` attribute:
+
+```php
+use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
+use Splicewire\Beam\Exec\Board\BoardMetric;
+use Splicewire\Beam\Exec\Board\BoardSource;
+use Splicewire\Beam\Exec\Data\BoardFigureData;
+
+#[BoardCard(key: 'pipeline', label: 'Pipeline', icon: 'Funnel', order: 20)]
+final class PipelineCard implements BoardMetric
+{
+    public function measure(BoardSource $source): array
+    {
+        $tenants = $source->tenants();
+
+        return [
+            new BoardFigureData(id: 'total', label: 'Tenants', value: count($tenants)),
+            new BoardFigureData(
+                id: 'provisioning',
+                label: 'Provisioning',
+                value: count(array_filter($tenants, fn ($t) => $t->status === 'provisioning')),
+                tone: 'busy',
+            ),
+        ];
+    }
+}
+```
+
+- **`key`** names the card: kebab-case, and never `dashboard`. Its resource is `exec-{key}`.
+- **`label`**, **`icon`** (a Lucide name) and **`order`** place it on the dashboard and in the
+  Board section.
+- **`ability`** gates one card more tightly than the board. Leave it out and the card reads under
+  the board's own gate, `entitlement:exec.view`.
+
+`measure()` returns the card's figures in display order, and the first one is its headline. Each
+figure's `tone` is one of `default`, `active`, `busy`, `warn` or `danger`, or null for none.
+
+**Read only through the source.** Everything a card shows comes from the `BoardSource` it is
+handed, never from a model, the database or config. The source is what the board is currently
+reading: live data today, and later the truth without synthetic tenants, a synthesized scenario or
+a projection. A card that reads around the source would show live numbers under a "Synthesized"
+banner. This package's test suite measures every registered card against an in-memory source and
+fails on a single query.
+
+A card is resolved from the container, so it can take its own dependencies in its constructor, as
+long as none of them is a way round the source.
+
+The [**duplicate-key policy**](/beam/docs/foundations/registries#key-policies) is **reject**: a
+card key names a resource and a URL, and a second card under one key would silently replace a
+figure the board shows. A class whose attribute declares a different key from the one it is
+registered under is refused too.
+
+## Going deeper
+
+The source is
+[`BoardCardRegistry`](https://github.com/splicewire/laravel-beam-exec/blob/main/src/Board/BoardCardRegistry.php).
+The contract is
+[`BoardMetric`](https://github.com/splicewire/laravel-beam-exec/blob/main/src/Board/BoardMetric.php),
+what it may read is
+[`BoardSource`](https://github.com/splicewire/laravel-beam-exec/blob/main/src/Board/BoardSource.php),
+and the reference card is
+[`TenantsCard`](https://github.com/splicewire/laravel-beam-exec/blob/main/src/Board/Cards/TenantsCard.php).

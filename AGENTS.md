@@ -6,22 +6,27 @@ Beam tier, MIT.
 
 ## What is here now
 
-- The service provider, `config/beam/exec.php` (merged under `beam.exec.*`, no keys yet), and the
+- The service provider, `config/beam/exec.php` (merged under `beam.exec.*`; `cards`), and the
   testbench and Pest harness (which boots beam and beam-ux for real).
 - The `exec` realm (`src/Realm/ExecRealm.php`, `src/Concerns/WiresExecRealm.php`): a `#[Realm]` marker
   in `beam.core.realms.classes`, the `beam.core.realms.exec` profile gated by `entitlement:exec.view`, the
   `exec.view` entitlement key, and the `board` nav seat. beam-ux gives it its dashboard. The host mounts
   the console with `Route::beamRealmConsole('exec', [...])` (README).
 
+- The card DX (`src/Board/`, `src/Concerns/WiresBoardCards.php`): `#[BoardCard]` on a `BoardMetric`,
+  the `beam.exec.cards` registry (`BoardCardRegistry`, filled from config), the `BoardSource` port
+  (bound scoped to `LiveBoardSource`), and `splicewire:beam:exec:make-card`. Each card is registered
+  at boot as an imperative particle resource `exec-{key}` (realm `exec`, section `board`) with an
+  INSTANCE backing, `BoardCardBacking`, carrying its key, and `BoardCardSummaryProvider`. Read Data:
+  `BoardFigureData`. The reference card is `TenantsCard`.
+
 What lands next, in the exec-board build order (the plan is the exec-board map in the ecosystem
 scratch tracker):
 
-- The card DX: `#[BoardCard]`, the `BoardMetric` interface, the `beam.exec.cards` registry and
-  `make-card`.
 - The board metrics: growth, usage, plan mix, revenue (MRR and churn) and risk.
 - The posture registry (`beam.exec.posture`), with a doctor-backed default. Tower contributes its
   own posture signal from the tower side.
-- `BoardLens`, resolved per request, and the `BoardSource` every card reads through.
+- `BoardLens`, resolved per request, which rebinds `BoardSource` (Truth, Scenario, Projection).
 
 ## Rules that are easy to get backwards
 
@@ -32,7 +37,11 @@ scratch tracker):
 - **Synthetic is a hard require** (owner ruling D9), because the Scenario and Projection lenses read
   a synthetic portfolio.
 - **Cards read only through `BoardSource`.** Under the Scenario lens every card must run with zero
-  queries.
+  queries. `tests/Board/BoardCardsTest.php` measures every registered card against an in-memory source
+  inside `DB::listen`; a new card that queries turns it red. A new `BoardSource` method must be
+  answerable in memory.
+- **A card resource is imperative on purpose.** The backing is an instance carrying the card key; the
+  attribute slot is a class-string (particle doctrine). Do not "fix" it into `#[ParticleResource]`.
 - **The synthesized watermark is not configurable.** Any synthesized figure carries it.
 - **The provider never hand-lists steps.** A concern is a `Wires*` trait whose methods carry
   `#[Chained('register')]` or `#[Chained('boot')]` with a declared `order:`. The realm marker is a

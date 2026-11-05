@@ -7,10 +7,12 @@ use Rushing\Popcorn\Contracts\ChainsTraitMethods as ChainsTraitMethodsContract;
 use Rushing\Popcorn\Registries\ScopesRegistrant;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Splicewire\Beam\Exec\Concerns\WiresBoardCards;
 use Splicewire\Beam\Exec\Concerns\WiresExecRealm;
+use Splicewire\Beam\Exec\Console\MakeBoardCardCommand;
 
 /**
- * The exec realm and its board dashboard.
+ * The exec realm, its board dashboard and the board's cards.
  *
  * Each concern this package wires arrives as a `Wires*` trait whose methods carry
  * `#[Chained('register')]` or `#[Chained('boot')]` with a declared `order:`, the beam-ux shape. Adding
@@ -24,6 +26,7 @@ class BeamExecServiceProvider extends PackageServiceProvider implements ChainsTr
 {
     use ChainsTraitMethods;
     use ScopesRegistrant;
+    use WiresBoardCards;
     use WiresExecRealm;
 
     protected function registrant(): string
@@ -35,7 +38,8 @@ class BeamExecServiceProvider extends PackageServiceProvider implements ChainsTr
     {
         $package
             ->name('laravel-beam-exec')
-            ->hasConfigFile(['beam/exec']);
+            ->hasConfigFile(['beam/exec'])
+            ->hasCommand(MakeBoardCardCommand::class);
     }
 
     public function packageRegistered(): void
