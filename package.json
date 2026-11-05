@@ -1,0 +1,22 @@
+{
+    "name": "@splicewire/laravel-beam-exec-js",
+    "private": true,
+    "description": "Private owning JS tooling workspace for @splicewire/beam-exec at js/beam-exec. Git-root pnpm lock selects the native package manager for Git dependency preparation; PHP distributions exclude JS tooling.",
+    "type": "module",
+    "packageManager": "pnpm@9.15.3",
+    "engines": {
+        "node": ">=20"
+    },
+    "scripts": {
+        "build": "pnpm --filter @splicewire/beam-exec build",
+        "typecheck": "pnpm --filter @splicewire/beam-exec typecheck",
+        "test": "pnpm --filter @splicewire/beam-exec test",
+        "lint:imports": "pnpm --filter @splicewire/beam-exec lint:imports",
+        "version": "pnpm dlx @changesets/cli@2.31.1 version"
+    },
+    "pnpm": {
+        "overrides": {
+            "esbuild": "0.28.1"
+        }
+    }
+}

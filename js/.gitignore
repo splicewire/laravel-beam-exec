@@ -1,0 +1,8 @@
+# Machine-local pnpm overlay (like composer.local.json) — never committed.
+.pnpmfile.cjs
+pnpm.local.json
+
+# Install + build output.
+node_modules/
+beam-exec/node_modules/
+beam-exec/dist/

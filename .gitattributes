@@ -1,3 +1,9 @@
 # The js/ directory is the @splicewire/beam-exec JS package. It travels in Git clones (a JS Git release builds
 # from it) but not in the PHP Composer distribution archive, so a consumer's vendor/ tree stays PHP-only.
 /js export-ignore
+
+# Git-root JS policy travels in clones, not the PHP distribution.
+/package.json export-ignore
+/pnpm-workspace.yaml export-ignore
+/pnpm-lock.yaml export-ignore
+/.npmrc export-ignore
