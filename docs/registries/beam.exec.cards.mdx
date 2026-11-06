@@ -138,8 +138,10 @@ handed, never from a model, the database or config. A source offers:
 Every read is already narrowed to the tenants the source sees, so a card never filters for itself.
 The source is what the board's lens is reading: the live estate, synthetic tenants included; the
 truth without them (the default while the reporting toggle in beam-tenancy excludes synthetic
-tenants); a synthesized scenario, a synthetic portfolio read in memory; or a projection, the default
-reading's revenue run forward. A card that reads around the source would show live numbers under a
+tenants); a synthesized scenario, a synthetic portfolio read in memory (a portfolio file the host
+declares, or a scenario a board member saved with the board's Scenarios panel: both are
+[`beam.synthetic.portfolios`](https://github.com/splicewire/laravel-beam-synthetic/blob/main/docs/registries/beam.synthetic.portfolios.mdx)
+entries); or a projection, the default reading's revenue run forward. A card that reads around the source would show live numbers under a
 "Synthesized" or "Projected" watermark. This package's test suite measures every registered card
 against an in-memory source, under a Scenario and under a Projection, and fails on a single query.
 

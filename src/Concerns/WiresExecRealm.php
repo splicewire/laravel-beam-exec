@@ -26,11 +26,13 @@ use Splicewire\Beam\Nav\NavSectionRegistry;
  *  - `beam.core.realms.exec`, the realm profile, defaults to `{label: 'Board', home: 'exec.home',
  *    gate: {entitlement: 'exec.view'}}`. A host's own declaration wins key by key. The gate is what makes
  *    the dashboard's `policy:` `entitlement:exec.view` rather than the central-realm default `os.operate`.
- *  - `beam.core.entitlements.keys` gains `exec.view`, so beam defines the `entitlement:exec.view` Gate
- *    ability. Without it, every `can:entitlement:exec.view` check is an undefined ability and denies.
+ *  - `beam.core.entitlements.keys` gains `exec.view` and `exec.scenario.manage`, so beam defines the
+ *    `entitlement:exec.view` and `entitlement:exec.scenario.manage` Gate abilities. Without them, every check is an
+ *    undefined ability and denies.
  *
  * Who holds `exec.view` is not decided here. beam-accounts' `DefaultEntitlementResolver` composes it from an
- * `operator` realm grant or an `exec` realm grant (the board seat).
+ * `operator` realm grant or an `exec` realm grant (the board seat), and `exec.scenario.manage` from the `operator`
+ * grant only.
  */
 trait WiresExecRealm
 {
@@ -53,8 +55,10 @@ trait WiresExecRealm
 
         $keys = (array) config('beam.core.entitlements.keys', []);
 
-        if (! in_array(ExecRealm::ENTITLEMENT, $keys, true)) {
-            $keys[] = ExecRealm::ENTITLEMENT;
+        foreach ([ExecRealm::ENTITLEMENT, ExecRealm::SCENARIO_MANAGE] as $key) {
+            if (! in_array($key, $keys, true)) {
+                $keys[] = $key;
+            }
         }
 
         config([

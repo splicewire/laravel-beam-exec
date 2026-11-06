@@ -26,6 +26,9 @@ class BoardLensBarData extends BeamData
      * @param  string  $defaultMode  the mode this board reads with no lens chosen (`truth` while the reporting toggle is on)
      * @param  list<BoardLensOptionData>  $options  the switch's segments, in order
      * @param  string|null  $switchUrl  where the switch posts (the mounted {@see SwitchBoardLens}); null when unmounted
+     * @param  list<BoardLensOptionData>  $scenarios  every scenario the Scenario lens can read, one per portfolio
+     *                                                (`value` is `scenario:<id>`): the host's portfolio files, then the
+     *                                                scenarios stored with the scenario builder
      */
     public function __construct(
         public string $lens,
@@ -36,5 +39,7 @@ class BoardLensBarData extends BeamData
         public array $options,
         public ?BoardLensBannerData $banner,
         public ?string $switchUrl,
+        #[DataCollectionOf(BoardLensOptionData::class)]
+        public array $scenarios = [],
     ) {}
 }

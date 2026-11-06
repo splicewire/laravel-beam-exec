@@ -105,6 +105,6 @@ it('writes the realm in the register phase, before any provider boots', function
     (new BeamExecServiceProvider($this->app))->register();
 
     expect(config('beam.core.realms.classes'))->toBe([ExecRealm::class])
-        ->and(config('beam.core.entitlements.keys'))->toBe(['exec.view'])
+        ->and(config('beam.core.entitlements.keys'))->toBe(['exec.view', 'exec.scenario.manage'])
         ->and(config('beam.core.realms.exec.gate.entitlement'))->toBe('exec.view');
 });

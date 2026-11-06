@@ -39,19 +39,29 @@ your middleware plus `can:entitlement:exec.view`:
 | `exec.frame.manifest` | `/exec/frame/manifest` | the exec realm's frame manifest |
 | `exec.frame.console` | `/exec/{frameRoute}` | the frame console, for every leaf the realm projects |
 
-To give the console the lens bar, mount the two lens operations in the same group and name the bar's page on
-the console (both lines go above `Route::beamUxSite()`):
+To give the console the lens bar and the Scenarios panel, mount the lens and scenario operations in the same
+group and name the bar's page on the console (both lines go above `Route::beamUxSite()`):
 
 ```php
+use Splicewire\Beam\Exec\Ops\DeleteScenario;
+use Splicewire\Beam\Exec\Ops\PreviewScenario;
 use Splicewire\Beam\Exec\Ops\ReadBoardLens;
+use Splicewire\Beam\Exec\Ops\ReadScenarios;
+use Splicewire\Beam\Exec\Ops\SaveScenario;
 use Splicewire\Beam\Exec\Ops\SwitchBoardLens;
 use Splicewire\Beam\Facades\Particle;
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Particle::ops('exec', 'exec-dashboard', [ReadBoardLens::class, SwitchBoardLens::class]);
+    Particle::ops('exec', 'exec-dashboard', [
+        ReadBoardLens::class, SwitchBoardLens::class,
+        ReadScenarios::class, PreviewScenario::class, SaveScenario::class, DeleteScenario::class,
+    ]);
 });
 Route::beamRealmConsole('exec', ['auth', 'verified'], page: 'exec/console');
 ```
+
+A host that mounts only the two lens operations gets the bar without the builder: the panel then reads nothing
+and says so.
 
 and register the page from the `@splicewire/beam-exec` JS package (`js/beam-exec` in this repository) with your
 Inertia pages:
@@ -63,7 +73,10 @@ import { execPages } from '@splicewire/beam-exec';
 beamInertiaOptions({ pages: { ...execPages(resolveBeamPage), ...pages } });
 ```
 
-`exec/console` is the packaged frame console with the lens bar above it. See "The lens bar" below.
+`exec/console` is the packaged frame console with the lens bar and the Scenarios panel above it. To draw the
+scenario preview with the board's own `trend-card`, pass frame's widget:
+`execPages(resolveBeamPage, { trendCard: TrendCard })` (`import { TrendCard } from '@schemastud/frame'`). See "The
+lens bar" and "Scenarios" below.
 
 ## Cards
 
@@ -150,7 +163,9 @@ host did not encrypt is ignored. `BoardLensResolver::cookie($lens)` issues one (
 hours) and `forget()` clears it.
 
 **Scenario** reads a portfolio from `beam.synthetic.portfolios`: the one the cookie names, or
-`beam.exec.scenario_portfolio` (null = the first one declared; beam-synthetic ships `demo-mixed-book`). Its
+`beam.exec.scenario_portfolio` (null = the first one declared; beam-synthetic ships `demo-mixed-book`). That is a
+portfolio file the host declares or a scenario stored with the builder (see "Scenarios" below); a stored one costs
+the store's two reads (its table, its rows) once per request, on top of the plans read. Its
 members' curves are laid out so the portfolio's window ends with this month, each member starting at its
 offset, the way `synthetic:materialize` writes the same portfolio's history. Revenue is priced by your own plans:
 the scenario reads the plans its blueprints name once, when the request first asks for the board, and prices
@@ -196,14 +211,14 @@ is not marked synthesized, and it is never unmarked either.
 
 ## The lens bar
 
-The bar is a segmented switch over the four lenses and, under Scenario or Projection, a banner stating the
-watermark for the whole page. The banner has no close control and nothing configures it away.
+The bar is a segmented switch over the four lenses, a list of every scenario the board can show (choosing one
+sets `scenario:<id>`), and, under Scenario or Projection, a banner stating the watermark for the whole page. The banner has no close control and nothing configures it away.
 
 Two declared operations on the `exec-dashboard` resource serve it, both subject-free and gated by `exec.view`:
 
 | operation | route | what |
 |---|---|---|
-| `ReadBoardLens` | `GET /exec/lens` | the bar: the active lens, the four segments, the banner (`BoardLensBarData`) |
+| `ReadBoardLens` | `GET /exec/lens` | the bar: the active lens, the four segments, the scenarios, the banner (`BoardLensBarData`) |
 | `SwitchBoardLens` | `POST /exec/switch-lens` | takes `{"lens": "scenario"}` (`BoardLensChoiceData`), sets the encrypted `beam_exec_lens` cookie and answers the bar the next request will read |
 
 The switch refuses, with a 422, any lens the board would not honour: a value outside the cookie vocabulary or a
@@ -218,6 +233,66 @@ page, a dashboard summary, the bar, and the switch itself. The card registry mar
 a card from a watermarked source, and a `RequestHandled` listener sets the header, so the rule covers frame's and
 beam's routes as well as this package's.
 
+## Scenarios
+
+A scenario is a beam-synthetic portfolio: blueprints, each with a count of tenants and a start offset in months,
+plus optional monthly churn and expansion rates (which the Projection lens borrows; a scenario itself replays the
+blueprints' curves as they are). The board can show any portfolio as `scenario:<id>`.
+
+### How to add a portfolio
+
+There are two ways, and both end as `scenario:<id>` in the lens bar.
+
+**As a file, in your code.** Put a YAML or JSON file in a directory you list in `beam.synthetic.portfolio_paths`
+(keep `DemoBlueprints::portfolios()` in the list to keep the Demo one):
+
+```yaml
+# resources/synthetic/portfolios/board-upside.yaml
+id: board-upside
+label: Board upside
+members:
+  - blueprint: demo-quillmere-studio
+    count: 6
+  - blueprint: demo-orrowby-hart
+    count: 2
+    startOffsetMonths: 4
+churnRate: 0.02
+```
+
+A file is reviewed with your code, and it always wins its id. The [`beam.synthetic.portfolios`
+page](https://github.com/splicewire/laravel-beam-synthetic/blob/main/docs/registries/beam.synthetic.portfolios.mdx)
+covers the rules.
+
+**With the builder, at runtime.** Open **Scenarios** under the lens bar, compose a draft from your blueprints
+(counts, start offsets, rates), watch its revenue and MRR trend preview as you edit, then **Save as scenario**
+under a kebab-case id. The scenario is stored in beam-synthetic's `beam_synthetic_portfolios` table (publish its
+migration: `vendor:publish --tag=beam-synthetic-migrations`, or `splicewire:beam:install`), and it is a lens from
+the next request: the bar's scenario list and the panel's **Show on board** both choose it.
+
+Four declared operations on `exec-dashboard` serve the panel, all subject-free:
+
+| operation | route | gate | what |
+|---|---|---|---|
+| `ReadScenarios` | `GET /exec/scenarios` | `exec.view` | files, then stored scenarios; the blueprints to compose from; whether the reader may save (`ScenarioCatalogData`) |
+| `PreviewScenario` | `POST /exec/preview-scenario` | `exec.view` | takes a draft (`ScenarioDraftData`), answers its revenue and MRR-trend figures (`ScenarioPreviewData`), stores nothing |
+| `SaveScenario` | `POST /exec/save-scenario` | `exec.scenario.manage` and `exec.view` | stores a draft under an id (`ScenarioSaveData`), replacing a stored one with that id |
+| `DeleteScenario` | `POST /exec/delete-scenario` | `exec.scenario.manage` and `exec.view` | deletes a stored scenario (`ScenarioIdData`) |
+
+- **A preview reads one table.** It builds the same in-memory source the Scenario lens reads, so its only query
+  is your plan catalog, which prices it; every figure after that is computed in memory. A blueprint whose plan you
+  do not sell is a 422 naming it. Its figures carry the synthesized watermark, and the response is no-store.
+- **A file's id cannot be saved over.** Saving under an id a portfolio file declares is a 422, and deleting a file
+  is a 422 too: a declared portfolio is part of your code. A stored row whose id a file later declares is shadowed,
+  never read.
+- **A stored scenario is validated whenever it is read.** One that names a blueprint you have since removed is left
+  out (and a lens cookie naming it reads the default lens) rather than breaking the board.
+- **Saves and deletes are logged** to the central activity trail (`log_name` `synthetic-portfolios`): who, and the
+  portfolio before and after.
+- A draft is capped at 12 members, 50 tenants each and a 36-month offset, because a preview runs inside the request.
+
+`synthetic:project --portfolio=<id>` and `synthetic:materialize --portfolio=<id>` read stored scenarios too. The
+builder does not materialize: writing real tenant rows stays a command an operator runs.
+
 ## Who sees the board
 
 The realm is gated by `entitlement:exec.view`. With `splicewire/laravel-beam-accounts`' default resolver,
@@ -228,6 +303,10 @@ two grants compose it:
   can read the board without becoming a site author.
 
 A member without either gets a 403 at `/exec`, and the realm is left out of their realm manifest.
+
+Saving and deleting scenarios also needs `entitlement:exec.scenario.manage`, which the default resolver composes
+from the `operator` grant only. A board seat can preview a scenario and show any scenario on the board, but cannot
+store one: a stored scenario is shared board state, and the seat stays a read seat.
 
 ## Configuration
 
@@ -258,7 +337,8 @@ It registers into:
 
 - `beam.core.realms.classes` (config): `Splicewire\Beam\Exec\Realm\ExecRealm`, the `#[Realm]` marker,
   which beam registers onto `beam.realm`;
-- `beam.core.entitlements.keys` (config): `exec.view`, so beam defines the `entitlement:exec.view` ability;
+- `beam.core.entitlements.keys` (config): `exec.view` and `exec.scenario.manage`, so beam defines the
+  `entitlement:exec.view` and `entitlement:exec.scenario.manage` abilities;
 - `beam.nav.sections`: the `board` seat in the `exec` realm, gated on `exec.view`;
 - `beam.particle.resources`: one `exec-{key}` resource per card, in the `exec` realm and the `board`
   section.

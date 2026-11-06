@@ -32,16 +32,19 @@ use Symfony\Component\HttpFoundation\Cookie;
  * **Live** otherwise. The toggle sets the default; it does not forbid choosing Live.
  *
  * A Scenario lens names a portfolio, or reads `beam.exec.scenario_portfolio` (null = the first portfolio the host
- * declares). A portfolio the host does not declare is an unknown value, read as the default lens, so a stale
- * cookie cannot strand the board.
+ * declares). The portfolio is any beam-synthetic `PortfolioRegistry` reads: a declared one (a file, or code) or one a
+ * board member saved at runtime with the scenario builder (a stored one). A portfolio the host has neither declared
+ * nor stored is an unknown value, read as the default lens, so a stale cookie (or a deleted scenario) cannot strand
+ * the board.
  *
  * ## The source
  *
  *  - Live and Truth: {@see LiveBoardSource::live()} and {@see LiveBoardSource::truth()}.
  *  - Scenario: {@see SyntheticBoardSource}, the portfolio's roster run in memory over the months that end with
- *    today's. Building it reads the host's price list once: the plans the roster's blueprints name, so the
- *    scenario is priced by the plans live billing prices with. That one central `plans` read is the only query a
- *    Scenario board makes; every card read after it is answered in memory.
+ *    today's ({@see scenarioFor()}). Building it reads the host's price list once: the plans the roster's blueprints
+ *    name, so the scenario is priced by the plans live billing prices with. For a declared portfolio that one central
+ *    `plans` read is the only query a Scenario board makes; a stored portfolio adds the store's two (its table, its
+ *    rows), once per request. Every card read after that is answered in memory.
  *  - Projection: {@see ProjectionBoardSource} over the default reading (truth while the toggle excludes synthetic
  *    tenants, live otherwise), anchored on the last closed month (the month before the as-of instant). Building it
  *    reads that reading's revenue once; every card read after it is answered in memory.
@@ -145,6 +148,18 @@ final class BoardLensResolver
             throw new InvalidArgumentException(sprintf('The scenario portfolio `%s` is not declared on this host.', (string) $lens->portfolio));
         }
 
+        return $this->scenarioFor($portfolio, $asOf);
+    }
+
+    /**
+     * The Scenario source for any portfolio, declared, stored or a draft the scenario builder is previewing: its
+     * roster run in memory over the months that end with `$asOf`'s, priced by the host's plans. Building it reads the
+     * plans the roster names (one central query); every read after that is in memory.
+     *
+     * @throws InvalidArgumentException when the portfolio names a blueprint this host does not declare
+     */
+    public function scenarioFor(ScenarioPortfolioData $portfolio, CarbonImmutable $asOf): SyntheticBoardSource
+    {
         $roster = SyntheticRoster::ofPortfolio($portfolio, $this->blueprints);
 
         return new SyntheticBoardSource(
@@ -243,6 +258,7 @@ final class BoardLensResolver
             return $configured;
         }
 
-        return array_key_first($this->portfolios->all());
+        // The first DECLARED portfolio when there is one, so a bare `scenario` never reads the stored-portfolio table.
+        return $this->portfolios->firstId();
     }
 }

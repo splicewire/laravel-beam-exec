@@ -39,7 +39,8 @@ Beam tier, MIT.
   `LiveBoardSource::live()`/`truth()`, or `SyntheticBoardSource`, a beam-synthetic portfolio's roster
   read in memory over the months ending with the as-of month and priced by beam-commerce's `PlanPricer`
   over a price list (`ScenarioPlan`) read from the host's plans when the source is built. That plans
-  read is the Scenario board's only query; every card read is in memory. Scenario posture is empty.
+  read is the Scenario board's only query for a declared portfolio (a stored one adds the store's two reads,
+  once per request); every card read is in memory. Scenario posture is empty.
 - The Projection lens (`src/Board/Sources/ProjectionBoardSource.php`, `src/Board/BoardProjection.php`): a
   decorator over the default reading. At build it makes one `revenue()` call on that reading (the anchor, the
   last closed month, and the 12 before it), takes the anchor's rows as beam-synthetic's `ProjectionBaseline`, and
@@ -62,9 +63,26 @@ Beam tier, MIT.
   (`POST {base}/switch-lens`, sets the cookie, refuses an unhonoured lens with a 422), both `exec.view` on the
   entitlement plane and answering `BoardLensBarData`. The banner is built from the source's watermark, never the
   cookie. `NoStoreWatermarkedResponses` sends `no-store, private` on every response the registry marked. The JS
-  package `@splicewire/beam-exec` draws the switch and the banner (`exec/console` page, `BoardLensBar`).
+  package `@splicewire/beam-exec` draws the switch and the banner (`exec/console` page, `BoardLensBar`). The bar
+  also lists every scenario (`BoardLensBarData::$scenarios`, one `scenario:<id>` option per portfolio).
+- The scenario builder (`src/Board/Scenarios/ScenarioBuilder.php`, `src/Ops/*Scenario*.php`, `js/beam-exec`'s
+  `ScenarioPanel`): four declared `#[ParticleOp]`s on `exec-dashboard`. `ReadScenarios` (`GET {base}/scenarios`)
+  and `PreviewScenario` (`POST {base}/preview-scenario`, a Read with a body) are `exec.view`; `SaveScenario` and
+  `DeleteScenario` are `exec.scenario.manage` plus `exec.view` (checked in the body). A scenario IS a
+  beam-synthetic portfolio: saving writes beam-synthetic's `StoredPortfolios` (central `beam_synthetic_portfolios`,
+  logged to the central activity trail), and `PortfolioRegistry` reads files then stored rows, a declared id
+  always winning, so a saved scenario is a lens from the next request. A preview builds the Scenario lens's own
+  source over the draft (`BoardLensResolver::scenarioFor()`): its one query is the plans read. The builder never
+  materializes.
 
 ## Rules that are easy to get backwards
+
+- **A preview is the Scenario lens, not a second engine.** `PreviewScenario` builds `SyntheticBoardSource` through
+  `BoardLensResolver::scenarioFor()` and measures `RevenueCard`/`MrrTrendCard` with the registry's watermark, so a
+  preview and the saved scenario's board agree figure for figure (`tests/Board/ScenarioBuilderTest.php` holds
+  both to it, and the preview to one query).
+- **The board seat stays a read seat.** `exec.scenario.manage` is composed from the operator grant only
+  (beam-accounts); a seat may preview and show scenarios, never store one.
 
 - **Tiering.** This package requires beam, beam-ux, beam-tenancy, beam-commerce and beam-synthetic
   DOWN. It must never require `splicewire/tower`, `splicewire/laravel-satellite` or any

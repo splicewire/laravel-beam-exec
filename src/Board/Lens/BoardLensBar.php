@@ -11,6 +11,7 @@ use Splicewire\Beam\Exec\Data\BoardLensBarData;
 use Splicewire\Beam\Exec\Data\BoardLensOptionData;
 use Splicewire\Beam\Exec\Ops\ReadBoardLens;
 use Splicewire\Beam\Exec\Ops\SwitchBoardLens;
+use Splicewire\Beam\Synthetic\Blueprints\PortfolioRegistry;
 
 /**
  * The lens bar's data: the switch's four segments and the banner ({@see BoardLensBarData}), read by
@@ -48,6 +49,7 @@ final class BoardLensBar
     public function __construct(
         private readonly BoardLensResolver $resolver,
         private readonly Router $router,
+        private readonly PortfolioRegistry $portfolios,
     ) {}
 
     public function for(BoardLens $lens, BoardSource $source): BoardLensBarData
@@ -72,7 +74,31 @@ final class BoardLensBar
             options: $options,
             banner: self::banner($source),
             switchUrl: $this->router->has(self::SWITCH_ROUTE) ? route(self::SWITCH_ROUTE, [], false) : null,
+            scenarios: $this->scenarios($lens),
         );
+    }
+
+    /**
+     * One option per portfolio the Scenario lens can read, so the bar can choose `scenario:<id>` directly: the
+     * declared portfolios, then the stored ones (a scenario saved with the builder is listed from the next read).
+     *
+     * @return list<BoardLensOptionData>
+     */
+    private function scenarios(BoardLens $lens): array
+    {
+        $options = [];
+
+        foreach ($this->portfolios->all() as $id => $portfolio) {
+            $options[] = new BoardLensOptionData(
+                value: BoardLens::scenario($id)->value(),
+                label: $portfolio->label,
+                description: $this->portfolios->declares($id) ? 'Declared by the host.' : 'Saved with the scenario builder.',
+                active: $lens->mode === BoardLensMode::Scenario && $lens->portfolio === $id,
+                available: true,
+            );
+        }
+
+        return $options;
     }
 
     /** The banner a source's figures call for: its watermark, or null for a reading of the estate. */

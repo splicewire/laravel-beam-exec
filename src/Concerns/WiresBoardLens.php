@@ -23,6 +23,11 @@ use Splicewire\Beam\Particle\ParticleOperationRegistry;
  *
  *     Particle::ops('exec', 'exec-dashboard', [ReadBoardLens::class, SwitchBoardLens::class]);
  *
+ * The scenario builder's four operations (`ReadScenarios`, `PreviewScenario`, `SaveScenario`, `DeleteScenario`) are
+ * declared in the same root, on the same resource, and are found by the same scan:
+ *
+ *     Particle::ops('exec', 'exec-dashboard', [ReadScenarios::class, PreviewScenario::class, SaveScenario::class, DeleteScenario::class]);
+ *
  * {@see NoStoreWatermarkedResponses} listens on the kernel's `RequestHandled`, so every response that carried a
  * synthesized or projected figure, whichever route served it, is `Cache-Control: no-store, private`.
  */

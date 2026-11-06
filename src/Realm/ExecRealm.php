@@ -28,6 +28,13 @@ final class ExecRealm
     /** The entitlement the realm is gated on (`beam.core.realms.exec.gate.entitlement`). */
     public const ENTITLEMENT = 'exec.view';
 
+    /**
+     * The entitlement that saves and deletes scenarios with the scenario builder (a stored portfolio is shared board
+     * state). Checked together with {@see ENTITLEMENT}. beam-accounts' default resolver composes it from the
+     * `operator` realm grant only: the `exec` grant stays a read seat.
+     */
+    public const SCENARIO_MANAGE = 'exec.scenario.manage';
+
     /** The realm's home route name: the host's `Route::beamRealmConsole('exec', …)` mounts it. */
     public const HOME = 'exec.home';
 

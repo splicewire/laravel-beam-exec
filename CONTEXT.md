@@ -49,6 +49,17 @@ markup a plan charges on it. Revenue from usage is a separate figure.
   every card read in memory. It models revenue only: only cards that declare `projects` are drawn.
 Chosen by the encrypted `beam_exec_lens` cookie; an absent or unknown value reads the default.
 
+**Stored scenario**:
+A scenario a board member saved with the **Scenario builder**: a beam-synthetic portfolio row in the central
+`beam_synthetic_portfolios` table (`StoredPortfolios`), read by `PortfolioRegistry` after the portfolio files. A
+declared portfolio (a file) always wins its id; a stored row is validated again whenever it is read. _Avoid_:
+"custom portfolio", "user scenario".
+
+**Scenario builder**:
+The board's Scenarios panel and its four declared operations: list the scenarios and blueprints, preview a draft
+(the Scenario lens over the draft, in memory), save it as a **Stored scenario**, delete one. Preview is for every
+board reader; save and delete need `exec.scenario.manage`, which the board seat does not hold.
+
 **Scenario price list**:
 The host's plans a Scenario is priced by (`ScenarioPlan`: slug, name, billing components), copied
 from the plan catalog when the scenario's source is built, so pricing a scenario month reads no row.
@@ -60,8 +71,8 @@ figure and a leading `synthesized` figure on every card (`BoardWatermark`), stam
 registry, never by a card. The sticky bar is the lens bar's banner.
 
 **Lens bar**:
-The board's segmented switch over the four lenses, and the banner that states the watermark for the
-page under Scenario or Projection. Read and switched through two declared operations
+The board's segmented switch over the four lenses, its list of every scenario (`scenario:<id>`), and the banner
+that states the watermark for the page under Scenario or Projection. Read and switched through two declared operations
 (`ReadBoardLens`, `SwitchBoardLens`); the banner is built from the source's watermark, not the
 cookie, and cannot be dismissed. Every response that carried a watermarked figure is no-store.
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { getJson, message, postJson } from './http';
 import type { BoardLensBannerData, BoardLensBarData } from './types';
 
 /**
@@ -16,6 +17,8 @@ export interface BoardLensBarProps {
     /** After a lens is chosen. Defaults to reloading the page, so every card is read again under the new lens. */
     onSwitched?: (bar: BoardLensBarData) => void;
     client?: BoardLensClient;
+    /** Bump it to read the bar again, e.g. after a scenario is saved, so the new one is listed at once. */
+    version?: number;
 }
 
 /**
@@ -26,7 +29,7 @@ export interface BoardLensBarProps {
  * from the cookie. It renders no close control and no state hides it: while the board's figures are synthesized or
  * projected, the banner is on the page.
  */
-export function BoardLensBar({ url = '/exec/lens', onSwitched = reloadPage, client = fetchClient }: BoardLensBarProps) {
+export function BoardLensBar({ url = '/exec/lens', onSwitched = reloadPage, client = fetchClient, version = 0 }: BoardLensBarProps) {
     const [bar, setBar] = useState<BoardLensBarData | null>(null);
     const [failed, setFailed] = useState<string | null>(null);
     const [pending, setPending] = useState<string | null>(null);
@@ -42,11 +45,11 @@ export function BoardLensBar({ url = '/exec/lens', onSwitched = reloadPage, clie
         return () => {
             live = false;
         };
-    }, [client, url]);
+    }, [client, url, version]);
 
     const choose = useCallback(
         (value: string) => {
-            if (!bar?.switchUrl || pending !== null || value === bar.mode) {
+            if (!bar?.switchUrl || pending !== null || value === bar.mode || value === bar.lens) {
                 return;
             }
 
@@ -127,6 +130,25 @@ export function BoardLensBar({ url = '/exec/lens', onSwitched = reloadPage, clie
                         </button>
                     ))}
                 </div>
+                {bar.scenarios && bar.scenarios.length > 0 && (
+                    <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>Scenario</span>
+                        <select
+                            data-exec-lens-scenario
+                            value={bar.scenarios.find((option) => option.active)?.value ?? ''}
+                            disabled={!bar.switchUrl || pending !== null}
+                            onChange={(event) => event.target.value !== '' && choose(event.target.value)}
+                            className="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground"
+                        >
+                            <option value="">Choose a scenario…</option>
+                            {bar.scenarios.map((option) => (
+                                <option key={option.value} value={option.value} title={option.description}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                )}
                 {!bar.chosen && <span className="text-xs text-muted-foreground">Default lens</span>}
                 {failed && <span className="text-xs text-destructive">{failed}</span>}
             </div>
@@ -153,44 +175,8 @@ function reloadPage(): void {
     window.location.reload();
 }
 
-function message(error: unknown): string {
-    return error instanceof Error ? error.message : String(error);
-}
-
-function xsrfToken(): string | null {
-    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
-
-    return match ? decodeURIComponent(match[1]) : null;
-}
-
-async function unwrap(response: Response, url: string): Promise<BoardLensBarData> {
-    if (!response.ok) {
-        throw new Error(`${response.status} from ${url}`);
-    }
-
-    return ((await response.json()) as { data: BoardLensBarData }).data;
-}
-
 /** The default client: same-origin fetch, JSON, with Laravel's XSRF cookie echoed on the write. */
 export const fetchClient: BoardLensClient = {
-    read: async (url) =>
-        unwrap(await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }), url),
-    choose: async (url, lens) => {
-        const token = xsrfToken();
-
-        return unwrap(
-            await fetch(url, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    ...(token ? { 'X-XSRF-TOKEN': token } : {}),
-                },
-                body: JSON.stringify({ lens }),
-            }),
-            url,
-        );
-    },
+    read: (url) => getJson<BoardLensBarData>(url),
+    choose: (url, lens) => postJson<BoardLensBarData>(url, { lens }),
 };
