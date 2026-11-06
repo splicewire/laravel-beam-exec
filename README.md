@@ -170,7 +170,8 @@ members' curves are laid out so the portfolio's window ends with this month, eac
 offset, the way `synthetic:materialize` writes the same portfolio's history. Revenue is priced by your own plans:
 the scenario reads the plans its blueprints name once, when the request first asks for the board, and prices
 every month through beam-commerce's `PlanPricer`, so its MRR moves through the same `RevenueMovements` the live
-ledger feeds. That plans read is the only query a Scenario board makes; every card is drawn in memory. A
+ledger feeds. For a declared portfolio that plans read is the only query a Scenario board makes (a stored one adds
+the store's two); every card is drawn in memory. A
 blueprint whose plan you do not have makes the revenue card fail, naming the plan, rather than price it at zero.
 A scenario has no posture: the posture card reads "Unmeasured".
 
