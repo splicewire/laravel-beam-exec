@@ -3,6 +3,7 @@
 namespace Splicewire\Beam\Exec\Data;
 
 use Closure;
+use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Exec\Ops\SaveScenario;
@@ -25,6 +26,7 @@ class ScenarioSaveData extends ScenarioDraftData
      * @param  list<PortfolioMemberData>  $members
      */
     public function __construct(
+        #[Description('The id to store the scenario under, in kebab-case (lowercase letters, digits and single hyphens, for example board-upside); it becomes the lens value scenario:<id>. An id the host declares in a portfolio file is refused; an id already stored is replaced.')]
         public string $id,
         string $label,
         #[DataCollectionOf(PortfolioMemberData::class)]

@@ -3,6 +3,7 @@
 namespace Splicewire\Beam\Exec\Data;
 
 use Illuminate\Validation\Rule;
+use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
@@ -33,10 +34,14 @@ class ScenarioDraftData extends BeamData
      * @param  list<PortfolioMemberData>  $members
      */
     public function __construct(
+        #[Description('The scenario\'s display name, shown in the lens bar and on the synthesized banner (at most 120 characters).')]
         public string $label,
+        #[Description('The blueprint members of the portfolio: each names a blueprint this host declares, how many tenants to synthesize from it, and how many months after the start they begin (1 to 12 members).')]
         #[DataCollectionOf(PortfolioMemberData::class)]
         public array $members,
+        #[Description('Optional monthly churn rate as a fraction between 0 and 1. Stored with the scenario for the Projection lens; the Scenario preview replays the blueprints\' own curves and does not apply it.')]
         public ?float $churnRate = null,
+        #[Description('Optional monthly expansion rate as a fraction between 0 and 1. Stored with the scenario for the Projection lens; the Scenario preview does not apply it.')]
         public ?float $expansionRate = null,
     ) {}
 

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Schemastud\DataSchemas\Attributes\Description;
 use Splicewire\Beam\Exec\Board\BoardCardDefinition;
 use Splicewire\Beam\Exec\Board\BoardCardRegistry;
 use Splicewire\Beam\Exec\Board\BoardWatermark;
@@ -134,6 +135,33 @@ it('declares all four scenario operations, subject-free, with every shape slot a
         ->and(collect(['scenarios', 'preview-scenario', 'save-scenario', 'delete-scenario'])->map(fn (string $op): string => route("exec-dashboard.{$op}", [], false))->all())
         ->toBe(['/exec/scenarios', '/exec/preview-scenario', '/exec/save-scenario', '/exec/delete-scenario'])
         ->and(config('beam.core.entitlements.keys'))->toContain('exec.view', 'exec.scenario.manage');
+});
+
+it('describes every property of every exec operation\'s declared input, so a host\'s reference and SDK can say what each takes', function () {
+    // A host publishes an op's `input:` property by property; a property with no description is a gap there (the
+    // flagship gates it: ParticleOperationInputCoverageTest). Walk every exec-dashboard op, inherited properties
+    // included (ScenarioSaveData inherits the draft's), and read the attribute the schema reads.
+    $inputs = collect(app(ParticleOperationRegistry::class)->all())
+        ->filter(fn ($op): bool => $op->resource === 'exec-dashboard' && is_string($op->input))
+        ->mapWithKeys(fn ($op): array => [$op->name => $op->input]);
+
+    expect($inputs->keys()->sort()->values()->all())
+        ->toBe(['delete-scenario', 'preview-scenario', 'save-scenario', 'switch-lens']);
+
+    $undescribed = [];
+    foreach ($inputs as $name => $input) {
+        foreach ((new ReflectionClass($input))->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+            if ($property->isStatic()) {
+                continue;
+            }
+            $description = $property->getAttributes(Description::class)[0] ?? null;
+            if (trim((string) ($description?->newInstance()->value ?? '')) === '') {
+                $undescribed[] = "{$name} {$property->getName()} (".class_basename($input).')';
+            }
+        }
+    }
+
+    expect($undescribed)->toBe([]);
 });
 
 it('lists the host\'s portfolio files and the blueprints to compose from, and says who may save', function () {
