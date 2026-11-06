@@ -122,6 +122,23 @@ it('declares both lens operations, subject-free and gated by exec.view on the en
         ->and(route(BoardLensBar::SWITCH_ROUTE, [], false))->toBe('/exec/switch-lens');
 });
 
+it('describes every property of the switch\'s declared input, so a host\'s reference and SDK can say what lens takes', function () {
+    // A host's API reference publishes an op's `input:` property by property, and a property with no description is a
+    // gap there (the flagship gates it: ParticleOperationInputCoverageTest). Read the attribute the schema reads.
+    $undescribed = [];
+    foreach ((new ReflectionClass(BoardLensChoiceData::class))->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+        $description = $property->getAttributes(\Schemastud\DataSchemas\Attributes\Description::class)[0] ?? null;
+        if (trim((string) ($description?->newInstance()->value ?? '')) === '') {
+            $undescribed[] = $property->getName();
+        }
+    }
+
+    expect(array_map(fn (ReflectionProperty $p): string => $p->getName(), (new ReflectionClass(BoardLensChoiceData::class))->getProperties(ReflectionProperty::IS_PUBLIC)))
+        ->toBe(['lens']);
+
+    expect($undescribed)->toBe([]);
+});
+
 it('refuses both operations to a user who is not on the board, and sets no cookie', function () {
     $this->actingAs($this->member)->getJson('/exec/lens')->assertForbidden();
 

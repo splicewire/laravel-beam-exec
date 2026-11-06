@@ -3,6 +3,7 @@
 namespace Splicewire\Beam\Exec\Data;
 
 use Closure;
+use Schemastud\DataSchemas\Attributes\Description;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
 use Splicewire\Beam\Exec\Board\Lens\BoardLens;
@@ -22,6 +23,7 @@ use Splicewire\Beam\Exec\Ops\SwitchBoardLens;
 class BoardLensChoiceData extends BeamData
 {
     public function __construct(
+        #[Description('The lens to read the board through: live, truth, scenario or projection, optionally followed by a colon and a portfolio this host declares (scenario:<portfolio>, projection:<portfolio>).')]
         public string $lens,
     ) {}
 
