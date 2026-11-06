@@ -108,7 +108,9 @@ throws shows on the board as one failing `contributor-errored` signal, and every
 still reports.
 
 Cards never call a contributor. They read `posture()` on the board source they are handed, which
-is how a synthesized scenario can show its own posture without touching the database.
+is how the lens decides what posture means: a synthesized scenario models customers and money, not
+the estate, so it has no posture, and the posture card reads unmeasured under it rather than put
+real audit results under a "Synthesized" watermark.
 
 The [**duplicate-key policy**](/beam/docs/foundations/registries#key-policies) is **reject**: two
 contributors under one key would silently drop a source of posture from the board. To stand one

@@ -33,18 +33,22 @@ same figures.
 ## Who fills it
 
 This package registers its built-in cards through its own config default: **Tenants** (the
-headcount), **Revenue** (MRR, ARR and how they moved), **Growth** (how fast the tenant base grows), **Plan mix** (who holds which plan) and
-**Usage** (what metered usage costs the platform). A host lists the cards it wants in
-`config('beam.exec.cards')`, as a list of classes:
+headcount), **Revenue** (MRR, ARR and how they moved), **MRR trend** (13 months of MRR as a line),
+**Growth** (how fast the tenant base grows), **Plan mix** (who holds which plan), **Usage** (what
+metered usage costs the platform), **Posture** (the readiness signals) and **Risk** (what is wrong
+now). A host lists the cards it wants in `config('beam.exec.cards')`, as a list of classes:
 
 ```php
 // config/beam/exec.php
 'cards' => [
     \Splicewire\Beam\Exec\Board\Cards\TenantsCard::class,
     \Splicewire\Beam\Exec\Board\Cards\RevenueCard::class,
+    \Splicewire\Beam\Exec\Board\Cards\MrrTrendCard::class,
     \Splicewire\Beam\Exec\Board\Cards\GrowthCard::class,
     \Splicewire\Beam\Exec\Board\Cards\PlanMixCard::class,
     \Splicewire\Beam\Exec\Board\Cards\UsageCard::class,
+    \Splicewire\Beam\Exec\Board\Cards\PostureCard::class,
+    \Splicewire\Beam\Exec\Board\Cards\RiskCard::class,
     \App\Board\Cards\PipelineCard::class,
 ],
 ```
@@ -127,6 +131,8 @@ handed, never from a model, the database or config. A source offers:
 - `revenue(['2026-07', '2026-08'])`: each paying tenant's revenue for those months. Turn it into MRR
   and churn with beam-commerce's `RevenueMovements::from()`, as the Revenue card does, rather than
   summing it yourself;
+- `posture()`: the readiness signals from the [posture contributors](beam.exec.posture), each with
+  its status, whether it measured anything, and when;
 - `asOf()`: the instant the board reads as of. "This month" is this instant's month, not today's.
 
 Every read is already narrowed to the tenants the source sees, so a card never filters for itself.
