@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Exec\Data;
 
+use Schemastud\DataSchemas\Attributes\Title;
 use Schemastud\Frame\Data\SummaryFigureData;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -17,7 +18,7 @@ use Splicewire\Beam\Exec\Ops\PreviewScenario;
  * figures (the wire every card's dashboard summary sends, so `trend` draws as frame's `trend-card`). Both lead with the
  * synthesized watermark figure, as every scenario figure does.
  */
-#[TypeScript]
+#[TypeScript, Title('Scenario preview')]
 class ScenarioPreviewData extends BeamData
 {
     /**

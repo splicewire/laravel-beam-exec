@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Exec\Data;
 
+use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
 
@@ -10,7 +11,7 @@ use Splicewire\Beam\Data\BeamData;
  *
  * @see ScenarioCatalogData
  */
-#[TypeScript]
+#[TypeScript, Title('Scenario blueprint')]
 class ScenarioBlueprintData extends BeamData
 {
     /**

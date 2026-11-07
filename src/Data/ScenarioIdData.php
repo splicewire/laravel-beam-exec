@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Exec\Data;
 
 use Closure;
 use Schemastud\DataSchemas\Attributes\Description;
+use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
 use Splicewire\Beam\Exec\Ops\DeleteScenario;
@@ -13,7 +14,7 @@ use Splicewire\Beam\Synthetic\Blueprints\PortfolioRegistry;
  * Which stored scenario to delete: the declared `input:` of {@see DeleteScenario}. A declared portfolio (a file) is
  * refused with a 422: it is part of the host's code, and deleting it is an edit there.
  */
-#[TypeScript]
+#[TypeScript, Title('Scenario to delete')]
 class ScenarioIdData extends BeamData
 {
     public function __construct(

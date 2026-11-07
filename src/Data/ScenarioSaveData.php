@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Exec\Data;
 
 use Closure;
 use Schemastud\DataSchemas\Attributes\Description;
+use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Exec\Ops\SaveScenario;
@@ -19,7 +20,7 @@ use Splicewire\Beam\Synthetic\Store\StoredPortfolios;
  * registered in code): a declared portfolio always wins its id, so saving under one is refused here rather than
  * stored and never read. Saving under an id already stored replaces that stored scenario.
  */
-#[TypeScript]
+#[TypeScript, Title('Scenario to save')]
 class ScenarioSaveData extends ScenarioDraftData
 {
     /**

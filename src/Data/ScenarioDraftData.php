@@ -4,6 +4,7 @@ namespace Splicewire\Beam\Exec\Data;
 
 use Illuminate\Validation\Rule;
 use Schemastud\DataSchemas\Attributes\Description;
+use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
@@ -21,7 +22,7 @@ use Splicewire\Beam\Synthetic\Data\ScenarioPortfolioData;
  * member must name a blueprint this host declares, and the counts are capped ({@see MAX_MEMBERS}, {@see MAX_COUNT},
  * {@see MAX_OFFSET}) because a preview runs the whole roster in memory inside the request.
  */
-#[TypeScript]
+#[TypeScript, Title('Scenario draft')]
 class ScenarioDraftData extends BeamData
 {
     public const MAX_MEMBERS = 12;

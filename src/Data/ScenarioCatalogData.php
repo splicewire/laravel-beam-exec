@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Exec\Data;
 
+use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
@@ -19,7 +20,7 @@ use Splicewire\Beam\Exec\Ops\SaveScenario;
  *
  * @see PreviewScenario
  */
-#[TypeScript]
+#[TypeScript, Title('Scenario catalog')]
 class ScenarioCatalogData extends BeamData
 {
     /**

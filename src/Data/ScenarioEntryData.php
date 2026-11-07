@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Exec\Data;
 
+use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
@@ -12,7 +13,7 @@ use Splicewire\Beam\Synthetic\Data\PortfolioMemberData;
  *
  * @see ScenarioCatalogData
  */
-#[TypeScript]
+#[TypeScript, Title('Scenario')]
 class ScenarioEntryData extends BeamData
 {
     public const FILE = 'file';
