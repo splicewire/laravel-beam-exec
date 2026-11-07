@@ -1,6 +1,6 @@
 {
     "name": "@splicewire/beam-exec",
-    "version": "0.0.0",
+    "version": "0.2.0",
     "description": "The exec board's lens bar for Beam hosts: a Live / Truth / Scenario / Projection switch over the declared lens operations of the PHP splicewire/laravel-beam-exec package, and the undismissable banner its synthesized or projected figures call for. Mirrors that package by domain.",
     "license": "MIT",
     "type": "module",
