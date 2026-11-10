@@ -63,7 +63,7 @@ export function createExecConsole(resolve: ResolvePage, options: ExecConsoleOpti
  *
  * To draw the scenario preview with the board's own trend-card, pass frame's widget:
  *
- *     import { TrendCard } from '@schemastud/frame';
+ *     import { TrendCard } from '@schemastud/frame/cards';
  *     execPages(resolveBeamPage, { trendCard: TrendCard })
  *
  * The page component is built once, so an Inertia visit back to the board does not remount the console.

@@ -75,7 +75,7 @@ beamInertiaOptions({ pages: { ...execPages(resolveBeamPage), ...pages } });
 
 `exec/console` is the packaged frame console with the lens bar and the Scenarios panel above it. To draw the
 scenario preview with the board's own `trend-card`, pass frame's widget:
-`execPages(resolveBeamPage, { trendCard: TrendCard })` (`import { TrendCard } from '@schemastud/frame'`). See "The
+`execPages(resolveBeamPage, { trendCard: TrendCard })` (`import { TrendCard } from '@schemastud/frame/cards'`). See "The
 lens bar" and "Scenarios" below.
 
 ## Cards

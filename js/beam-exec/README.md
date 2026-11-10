@@ -33,7 +33,7 @@ Route::beamRealmConsole('exec', ['auth', 'verified'], page: 'exec/console');
 To draw the preview's MRR series with the board's own trend-card, pass frame's widget. This package does not depend on frame; without a widget the series is a table:
 
 ```ts
-import { TrendCard } from '@schemastud/frame';
+import { TrendCard } from '@schemastud/frame/cards';
 
 execPages(resolveBeamPage, { trendCard: TrendCard });
 ```
