@@ -65,16 +65,17 @@ The host's plans a Scenario is priced by (`ScenarioPlan`: slug, name, billing co
 from the plan catalog when the scenario's source is built, so pricing a scenario month reads no row.
 
 **Synthesized watermark**:
-The sticky bar and per-card note, "Synthesized — not real data", on every figure a Scenario lens
-produces. It cannot be configured off. In the data it is a `synthesized` flag on every
-figure and a leading `synthesized` figure on every card (`BoardWatermark`), stamped by the card
-registry, never by a card. The sticky bar is the lens bar's banner.
+The per-card note, "Synthesized — not real data", on every figure a Scenario lens produces. It cannot be
+configured off. In the data it is a `synthesized` flag on every figure and a leading `synthesized` figure on every
+card (`BoardWatermark`), stamped by the card registry, never by a card. There is no sticky bar: the owner removed it
+on 2026-11-12 (ADR-0004 clause 5, amended). Rule 11: grepped `undismissable` and `no off switch` across .scratch —
+11 hits in 5 files, listed in ADR-0004's rule-11 line.
 
 **Lens bar**:
-The board's segmented switch over the four lenses, its list of every scenario (`scenario:<id>`), and the banner
-that states the watermark for the page under Scenario or Projection. Read and switched through two declared operations
-(`ReadBoardLens`, `SwitchBoardLens`); the banner is built from the source's watermark, not the
-cookie, and cannot be dismissed. Every response that carried a watermarked figure is no-store.
+The board's segmented switch over the four lenses and its list of every scenario (`scenario:<id>`). Read and switched
+through two declared operations (`ReadBoardLens`, `SwitchBoardLens`). Its data still carries `banner`, the watermark's
+text for the page under Scenario or Projection, built from the source's watermark, not the cookie; the packaged bar
+does not draw it. Every response that carried a watermarked figure is no-store.
 
 **Projected watermark**:
 The Projection lens's mark, "Projected — not real data", kept distinct from the synthesized one: a

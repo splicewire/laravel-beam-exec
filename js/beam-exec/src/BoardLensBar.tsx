@@ -1,3 +1,4 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@schemastud/ui';
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { getJson, message, postJson } from './http';
 import type { BoardLensBannerData, BoardLensBarData } from './types';
@@ -22,12 +23,13 @@ export interface BoardLensBarProps {
 }
 
 /**
- * The board's lens bar: a segmented switch over Live, Truth, Scenario and Projection, and, under a synthesized or
- * projected lens, a banner that cannot be dismissed.
+ * The board's lens bar: a segmented switch over Live, Truth, Scenario and Projection, and the kit's select for the
+ * scenario to read.
  *
- * The banner is the server's `banner`, which the server takes from the source the cards read (their watermark), not
- * from the cookie. It renders no close control and no state hides it: while the board's figures are synthesized or
- * projected, the banner is on the page.
+ * The bar draws no band. The server still sends `banner`, and the bar leaves it unread: what marks synthesized or
+ * projected figures on the page is the checked lens, the scenario's name in the picker, and the watermark row the server
+ * stamps on each card (owner, 2026-11-12, superseding ADR-0004 clause 5 for the band). `LensBanner` stays exported for a
+ * host that wants to draw one.
  */
 export function BoardLensBar({ url = '/exec/lens', onSwitched = reloadPage, client = fetchClient, version = 0 }: BoardLensBarProps) {
     const [bar, setBar] = useState<BoardLensBarData | null>(null);
@@ -131,33 +133,38 @@ export function BoardLensBar({ url = '/exec/lens', onSwitched = reloadPage, clie
                     ))}
                 </div>
                 {bar.scenarios && bar.scenarios.length > 0 && (
-                    <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>Scenario</span>
-                        <select
-                            data-exec-lens-scenario
+                    <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                        <span id="exec-lens-scenario-label">Scenario</span>
+                        <Select
+                            // '' shows the placeholder: Radix's way to say no scenario is being read.
                             value={bar.scenarios.find((option) => option.active)?.value ?? ''}
                             disabled={!bar.switchUrl || pending !== null}
-                            onChange={(event) => event.target.value !== '' && choose(event.target.value)}
-                            className="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground"
+                            onValueChange={choose}
                         >
-                            <option value="">Choose a scenario…</option>
-                            {bar.scenarios.map((option) => (
-                                <option key={option.value} value={option.value} title={option.description}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                            <SelectTrigger data-exec-lens-scenario aria-labelledby="exec-lens-scenario-label" className="h-8 w-auto min-w-48">
+                                <SelectValue placeholder="Choose a scenario…" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {bar.scenarios.map((option) => (
+                                    <SelectItem key={option.value} value={option.value} title={option.description}>
+                                        {option.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 )}
                 {!bar.chosen && <span className="text-xs text-muted-foreground">Default lens</span>}
                 {failed && <span className="text-xs text-destructive">{failed}</span>}
             </div>
-            {bar.banner && <LensBanner banner={bar.banner} />}
         </div>
     );
 }
 
-/** The undismissable banner. No close control, by design (owner ruling D12: mandatory and not configurable). */
+/**
+ * A band naming a synthesized or projected board. The lens bar no longer draws it (owner, 2026-11-12); it stays
+ * exported, unused by the bar, for a host that wants one. It has no close control.
+ */
 export function LensBanner({ banner }: { banner: BoardLensBannerData }) {
     return (
         <div

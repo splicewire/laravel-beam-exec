@@ -2,12 +2,14 @@
 
 The exec board's lens bar and Scenarios panel for Beam hosts. It mirrors the PHP package `splicewire/laravel-beam-exec` by domain.
 
-The bar is a segmented switch over the board's four lenses: Live, Truth, Scenario and Projection. Under a synthesized or projected lens it also shows a banner, and the banner cannot be dismissed. Both read the two lens operations the PHP package declares:
+The bar is a segmented switch over the board's four lenses: Live, Truth, Scenario and Projection, and a picker for the scenario to read. It reads the two lens operations the PHP package declares:
 
 - `GET {base}/lens` (`ReadBoardLens`) reads the bar.
 - `POST {base}/switch-lens` (`SwitchBoardLens`) chooses a lens.
 
-The server builds the banner from the watermark on the cards' figures. This package draws it and offers no way to hide it. The bar also lists every scenario the board can show; choosing one sets `scenario:<id>`.
+The bar lists every scenario the board can show; choosing one sets `scenario:<id>`. The scenario picker and the panel's blueprint picker are the `@schemastud/ui` select, a peer of this package beside React.
+
+The bar draws no band (owner, 2026-11-12; ADR-0004 clause 5, amended). Under Scenario or Projection the page is marked by the checked lens, the scenario's name in the picker, and the watermark figure that leads each card. The server still sends `banner`; `LensBanner` stays exported for a host that wants to draw one. Rule 11: grepped `undismissable` and `no off switch` across .scratch — 11 hits in 5 files, listed in ADR-0004's rule-11 line.
 
 The Scenarios panel is the board's scenario builder, over four more declared operations:
 

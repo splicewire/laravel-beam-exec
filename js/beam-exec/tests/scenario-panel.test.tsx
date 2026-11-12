@@ -10,6 +10,7 @@ import {
     type ScenarioClient,
     type ScenarioPreviewData,
 } from '../src/index';
+import { choose, optionsOf } from './select';
 
 afterEach(cleanup);
 
@@ -140,9 +141,12 @@ describe('ScenarioPanel', () => {
         await waitFor(() => expect(api.preview).toHaveBeenCalled());
 
         fireEvent.click(screen.getByRole('button', { name: 'Add a blueprint' }));
-        const selects = screen.getAllByLabelText('Blueprint') as HTMLSelectElement[];
-        expect([...selects[1].options].map((o) => o.value)).toEqual(['demo-orrowby-hart', 'demo-quillmere-studio']);
-        fireEvent.change(selects[1], { target: { value: 'demo-quillmere-studio' } });
+        const selects = screen.getAllByRole('combobox', { name: 'Blueprint' });
+        expect(await optionsOf(selects[1])).toEqual([
+            'Orrowby & Hart (professional, dip-then-recover)',
+            'Quillmere Studio (professional, steady-ramp)',
+        ]);
+        await choose(selects[1], 'Quillmere Studio (professional, steady-ramp)');
         fireEvent.change(screen.getAllByLabelText('Starts after (months)')[1], { target: { value: '3' } });
         fireEvent.change(screen.getByLabelText('Churn (%)'), { target: { value: '2.5' } });
 
@@ -231,12 +235,24 @@ describe('BoardLensBar scenario list', () => {
         const onSwitched = vi.fn();
         render(<BoardLensBar client={api} onSwitched={onSwitched} />);
 
-        const select = (await screen.findByLabelText('Scenario')) as HTMLSelectElement;
-        expect([...select.options].map((o) => o.value)).toEqual(['', 'scenario:demo-mixed-book', 'scenario:board-upside']);
+        const select = await screen.findByRole('combobox', { name: 'Scenario' });
+        expect(select.hasAttribute('data-exec-lens-scenario')).toBe(true);
+        expect(select.textContent).toBe('Choose a scenario…');
+        expect(await optionsOf(select)).toEqual(['Demo mixed book', 'Board upside']);
 
-        fireEvent.change(select, { target: { value: 'scenario:board-upside' } });
+        await choose(select, 'Board upside');
         await waitFor(() => expect(api.choose).toHaveBeenCalledWith('/exec/switch-lens', 'scenario:board-upside'));
         expect(onSwitched).toHaveBeenCalledTimes(1);
+    });
+
+    it('names the scenario being read in the picker, the mark the band no longer carries', async () => {
+        const scenarios = [
+            { value: 'scenario:demo-mixed-book', label: 'Demo mixed book', description: 'Declared by the host.', active: true, available: true },
+            { value: 'scenario:board-upside', label: 'Board upside', description: 'Saved with the scenario builder.', active: false, available: true },
+        ];
+        render(<BoardLensBar client={{ read: vi.fn(async () => bar(scenarios)), choose: vi.fn() }} />);
+
+        expect((await screen.findByRole('combobox', { name: 'Scenario' })).textContent).toBe('Demo mixed book');
     });
 
     it('reads the bar again when its version changes, so a saved scenario is listed at once', async () => {

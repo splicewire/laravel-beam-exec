@@ -61,10 +61,11 @@ Beam tier, MIT.
 - The lens bar (`src/Board/Lens/BoardLensBar.php`, `src/Ops/`, `src/Concerns/WiresBoardLens.php`, `js/beam-exec`):
   two declared `#[ParticleOp]`s on `exec-dashboard`, `ReadBoardLens` (`GET {base}/lens`) and `SwitchBoardLens`
   (`POST {base}/switch-lens`, sets the cookie, refuses an unhonoured lens with a 422), both `exec.view` on the
-  entitlement plane and answering `BoardLensBarData`. The banner is built from the source's watermark, never the
+  entitlement plane and answering `BoardLensBarData`. Its `banner` is built from the source's watermark, never the
   cookie. `NoStoreWatermarkedResponses` sends `no-store, private` on every response the registry marked. The JS
-  package `@splicewire/beam-exec` draws the switch and the banner (`exec/console` page, `BoardLensBar`). The bar
-  also lists every scenario (`BoardLensBarData::$scenarios`, one `scenario:<id>` option per portfolio).
+  package `@splicewire/beam-exec` draws the switch and no band (`exec/console` page, `BoardLensBar`; `LensBanner`
+  stays exported for a host). The bar also lists every scenario in the `@schemastud/ui` select
+  (`BoardLensBarData::$scenarios`, one `scenario:<id>` option per portfolio).
 - The scenario builder (`src/Board/Scenarios/ScenarioBuilder.php`, `src/Ops/*Scenario*.php`, `js/beam-exec`'s
   `ScenarioPanel`): four declared `#[ParticleOp]`s on `exec-dashboard`. `ReadScenarios` (`GET {base}/scenarios`)
   and `PreviewScenario` (`POST {base}/preview-scenario`, a Read with a body) are `exec.view`; `SaveScenario` and
@@ -102,8 +103,11 @@ Beam tier, MIT.
   stamped in `BoardCardRegistry::figures()`, never by a card; measure a card through `figures()`, not
   `metric()->measure()`, anywhere its figures reach a reader. The figure ids `synthesized` and
   `projected` are reserved. A card sets only `forecast`, per month, with `Figures::forecast()`.
-- **The banner has no off switch.** No field hides it and the renderer draws no close control. Its presence
-  follows the source's watermark, so do not key it on the cookie or the mode.
+- **The bar draws no band; the wire still carries one.** The owner removed the band on 2026-11-12 (ADR-0004
+  clause 5, amended). Keep `BoardLensBarData::$banner` and its derivation from the source's watermark, never the
+  cookie or the mode; do not put the band back in `BoardLensBar`. The marks are the checked lens, the scenario's name
+  in the picker, and each card's leading watermark figure. Rule 11: grepped `undismissable` and `no off switch`
+  across .scratch — 11 hits in 5 files, listed in ADR-0004's rule-11 line.
 - **`projects: true` is a promise to read revenue only.** The Projection source refuses every other read,
   so a card that declares it and reads tenants fails loudly. Leave it off and the card is absent under
   Projection.

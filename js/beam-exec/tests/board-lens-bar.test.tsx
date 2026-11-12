@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { BoardLensBar, execPages, type BoardLensBarData, type BoardLensClient } from '../src/index';
+import { BoardLensBar, execPages, LensBanner, type BoardLensBarData, type BoardLensClient } from '../src/index';
 
 afterEach(cleanup);
 
@@ -54,17 +54,22 @@ describe('BoardLensBar', () => {
     it.each([
         ['scenario', synthesized],
         ['projection', projected],
-    ] as const)('shows an undismissable banner under %s', async (mode, banner) => {
+    ] as const)('draws no band under %s, though the server still sends one; the checked lens marks the board', async (mode, banner) => {
         const { container } = render(<BoardLensBar client={client(bar(mode, banner))} />);
 
-        const status = await screen.findByRole('status');
+        expect((await screen.findByRole('radio', { name: mode[0].toUpperCase() + mode.slice(1) })).getAttribute('aria-checked')).toBe('true');
+        expect(screen.queryByRole('status')).toBeNull();
+        expect(container.querySelector('[data-exec-lens-banner]')).toBeNull();
+        expect(container.textContent).not.toContain(banner.label);
+        expect(container.textContent).not.toContain(banner.detail);
+    });
 
-        expect(status.getAttribute('data-exec-lens-banner')).toBe(banner.kind);
-        expect(status.textContent).toContain(banner.label);
-        expect(status.textContent).toContain(banner.detail);
-        // No close control of any kind: the banner holds no button, and the bar's only buttons are the four lenses.
-        expect(status.querySelectorAll('button, [role="button"], [aria-label*="lose" i], [aria-label*="ismiss" i]')).toHaveLength(0);
-        expect(Array.from(container.querySelectorAll('button')).map((b) => b.getAttribute('role'))).toEqual(['radio', 'radio', 'radio', 'radio']);
+    it('keeps LensBanner exported for a host that draws its own band', () => {
+        render(<LensBanner banner={synthesized} />);
+
+        const status = screen.getByRole('status');
+        expect(status.getAttribute('data-exec-lens-banner')).toBe('synthesized');
+        expect(status.textContent).toContain('Synthesized — not real data');
     });
 
     it('posts the chosen lens to the switch, then hands the answer on', async () => {
@@ -77,7 +82,8 @@ describe('BoardLensBar', () => {
         await waitFor(() => expect(onSwitched).toHaveBeenCalledTimes(1));
         expect(api.read).toHaveBeenCalledWith('/exec/lens');
         expect(api.choose).toHaveBeenCalledWith('/exec/switch-lens', 'scenario');
-        expect(screen.getByRole('status').textContent).toContain('Synthesized — not real data');
+        expect(screen.getByRole('radio', { name: 'Scenario' }).getAttribute('aria-checked')).toBe('true');
+        expect(screen.queryByRole('status')).toBeNull();
     });
 
     it('does not post the lens already active, nor a lens the host cannot honour', async () => {

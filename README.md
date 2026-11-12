@@ -213,21 +213,27 @@ is not marked synthesized, and it is never unmarked either.
 ## The lens bar
 
 The bar is a segmented switch over the four lenses, a list of every scenario the board can show (choosing one
-sets `scenario:<id>`), and, under Scenario or Projection, a banner stating the watermark for the whole page. The banner has no close control and nothing configures it away.
+sets `scenario:<id>`, drawn with the `@schemastud/ui` select). It draws no band: under Scenario or Projection the page
+is marked by the checked lens, the scenario's name in the picker, and the watermark figure that leads each card
+(ADR-0004 clause 5, amended 2026-11-12). A card that measured nothing under those lenses has no figure and so no mark.
 
 Two declared operations on the `exec-dashboard` resource serve it, both subject-free and gated by `exec.view`:
 
 | operation | route | what |
 |---|---|---|
-| `ReadBoardLens` | `GET /exec/lens` | the bar: the active lens, the four segments, the scenarios, the banner (`BoardLensBarData`) |
+| `ReadBoardLens` | `GET /exec/lens` | the bar: the active lens, the four segments, the scenarios, and `banner`, the watermark's text for the page, which the packaged bar does not draw (`BoardLensBarData`) |
 | `SwitchBoardLens` | `POST /exec/switch-lens` | takes `{"lens": "scenario"}` (`BoardLensChoiceData`), sets the encrypted `beam_exec_lens` cookie and answers the bar the next request will read |
 
 The switch refuses, with a 422, any lens the board would not honour: a value outside the cookie vocabulary or a
 portfolio this host does not declare. (A stale cookie still reads as the default lens; only choosing one is
 strict.)
 
-The banner is taken from the source the cards read, the same `synthesizedFrom()` and `projection()` the
-watermark is stamped from, so it appears exactly when the cards are watermarked, whatever the cookie says.
+`banner` is taken from the source the cards read, the same `synthesizedFrom()` and `projection()` the
+watermark is stamped from, so it is set exactly when the cards are watermarked, whatever the cookie says. A host that
+wants a band can draw it with the package's `LensBanner`.
+
+Rule 11 (the band, removed 2026-11-12): grepped `undismissable` and `no off switch` across .scratch — 11 hits in 5
+files, listed in ADR-0004's rule-11 line.
 
 Every response that carried a synthesized or projected figure is sent `Cache-Control: no-store, private`: a card's
 page, a dashboard summary, the bar, and the switch itself. The card registry marks the request when it measures

@@ -1,3 +1,4 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@schemastud/ui';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ComponentType } from 'react';
 import { getJson, message, postJson, RequestError } from './http';
 import type {
@@ -348,21 +349,27 @@ export function ScenarioPanel({
 
                                                 return (
                                                     <div key={index} className="flex flex-wrap items-end gap-2" data-exec-scenario-member={index}>
-                                                        <label className="text-sm">
-                                                            <span className="mb-1 block text-xs text-muted-foreground">Blueprint</span>
-                                                            <select
-                                                                value={member.blueprint}
-                                                                onChange={(event) => updateMember(index, { blueprint: event.target.value })}
-                                                                aria-describedby={error ? `${row}-error` : undefined}
-                                                                className="rounded-md border border-border bg-background px-2 py-1 text-foreground"
-                                                            >
-                                                                {catalog.blueprints.map((blueprint) => (
-                                                                    <option key={blueprint.id} value={blueprint.id}>
-                                                                        {blueprint.name} ({blueprint.planSlug}, {blueprint.scenario})
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        </label>
+                                                        <div className="text-sm">
+                                                            <span id={`${row}-blueprint`} className="mb-1 block text-xs text-muted-foreground">
+                                                                Blueprint
+                                                            </span>
+                                                            <Select value={member.blueprint} onValueChange={(blueprint) => updateMember(index, { blueprint })}>
+                                                                <SelectTrigger
+                                                                    aria-labelledby={`${row}-blueprint`}
+                                                                    aria-describedby={error ? `${row}-error` : undefined}
+                                                                    className="h-8 w-auto min-w-56"
+                                                                >
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {catalog.blueprints.map((blueprint) => (
+                                                                        <SelectItem key={blueprint.id} value={blueprint.id}>
+                                                                            {blueprint.name} ({blueprint.planSlug}, {blueprint.scenario})
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
                                                         <label className="text-sm">
                                                             <span className="mb-1 block text-xs text-muted-foreground">Tenants</span>
                                                             <input

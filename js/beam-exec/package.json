@@ -1,7 +1,7 @@
 {
     "name": "@splicewire/beam-exec",
     "version": "0.0.0",
-    "description": "The exec board's lens bar for Beam hosts: a Live / Truth / Scenario / Projection switch over the declared lens operations of the PHP splicewire/laravel-beam-exec package, and the undismissable banner its synthesized or projected figures call for. Mirrors that package by domain.",
+    "description": "The exec board's lens bar for Beam hosts: a Live / Truth / Scenario / Projection switch over the declared lens operations of the PHP splicewire/laravel-beam-exec package, with its scenario picker drawn by the @schemastud/ui select. Mirrors that package by domain.",
     "license": "MIT",
     "type": "module",
     "main": "dist/index.js",
@@ -37,14 +37,24 @@
         "prepare": "npm run build"
     },
     "peerDependencies": {
+        "@schemastud/ui": "^0.2.1",
         "react": ">=18"
     },
     "devDependencies": {
+        "@radix-ui/react-dialog": "^1.1.0",
+        "@radix-ui/react-select": "^2.3.3",
+        "@radix-ui/react-separator": "^1.1.2",
+        "@radix-ui/react-slot": "^1.2.3",
+        "@radix-ui/react-switch": "^1.3.5",
+        "@radix-ui/react-tooltip": "^1.1.8",
+        "@schemastud/ui": "github:schemastud/js#abef468b39df9b1e81fd9a2081e69f8094c60e4e&path:/ui",
+        "@tanstack/react-table": "^8.20.0",
         "@testing-library/dom": "^10.4.0",
         "@testing-library/react": "^16.1.0",
         "@types/react": "^19.0.0",
         "@types/react-dom": "^19.0.0",
         "jsdom": "^25.0.1",
+        "lucide-react": "^0.468.0",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
         "tsup": "^8.5.1",
