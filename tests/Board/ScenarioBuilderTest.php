@@ -3,6 +3,7 @@
 require_once __DIR__.'/../Support/ScenarioPlans.php';
 
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Support\Facades\DB;
@@ -31,20 +32,19 @@ use Splicewire\Beam\Exec\Ops\ReadScenarios;
 use Splicewire\Beam\Exec\Ops\SaveScenario;
 use Splicewire\Beam\Exec\Ops\SwitchBoardLens;
 use Splicewire\Beam\Facades\Particle;
+use Splicewire\Beam\Models\BeamParticle;
 use Splicewire\Beam\Models\CentralActivityLog;
 use Splicewire\Beam\Particle\OperationKind;
 use Splicewire\Beam\Particle\ParticleOperationRegistry;
 use Splicewire\Beam\Particle\Subject\NoSubject;
 use Splicewire\Beam\Routing\HttpMethod;
 use Splicewire\Beam\Synthetic\Blueprints\PortfolioRegistry;
-use Splicewire\Beam\Synthetic\Store\StoredPortfolio;
 use Splicewire\Beam\Synthetic\Store\StoredPortfolios;
 use Splicewire\Beam\Tenancy\Tenant;
 
 /*
  * The scenario builder's four declared operations, mounted the way a host mounts them (inside `web`, beside the lens
- * operations), over a central schema with the two Demo plans and beam-synthetic's stored-portfolio table migrated from
- * its real stub. Three readers: an operator (exec.view and exec.scenario.manage), a board seat (exec.view only, the
+ * operations), over a central schema with the two Demo plans and beam-synthetic's central Data-declared particles, with no dedicated portfolio table. Three readers: an operator (exec.view and exec.scenario.manage), a board seat (exec.view only, the
  * read seat), and a team member (neither).
  */
 beforeEach(function () {
@@ -74,7 +74,18 @@ beforeEach(function () {
         $t->uuid('batch_uuid')->nullable();
         $t->timestamps();
     });
-    (require dirname(__DIR__, 2).'/vendor/splicewire/laravel-beam-synthetic/database/migrations/create_beam_synthetic_portfolios_table.php.stub')->up();
+    Schema::create('beam_particles', function (Blueprint $table): void {
+        $table->uuid('id')->primary();
+        $table->string('schema_ref')->nullable();
+        $table->string('schema_id')->nullable();
+        $table->string('migration_status')->nullable();
+        $table->string('head_version')->nullable();
+        $table->string('source_tier')->default('local');
+        $table->json('payload');
+        $table->json('meta')->nullable();
+        $table->timestamps();
+    });
+    expect(Schema::hasTable('beam_synthetic_portfolios'))->toBeFalse();
     seedScenarioPlans();
 
     Route::middleware('web')->group(function (): void {
@@ -194,7 +205,7 @@ it('refuses every scenario operation to a user who is not on the board, storing 
     nextScenarioRequest();
     $this->actingAs($this->member)->postJson('/exec/delete-scenario', ['id' => 'board-upside'])->assertForbidden();
 
-    expect(StoredPortfolio::query()->count())->toBe(0);
+    expect(BeamParticle::query()->count())->toBe(0);
 });
 
 it('lets a board seat preview but not save or delete: the seat stays a read seat', function () {
@@ -204,7 +215,7 @@ it('lets a board seat preview but not save or delete: the seat stays a read seat
     nextScenarioRequest();
     $this->actingAs($this->seat)->postJson('/exec/delete-scenario', ['id' => 'board-upside'])->assertForbidden();
 
-    expect(StoredPortfolio::query()->count())->toBe(0);
+    expect(BeamParticle::query()->count())->toBe(0);
 });
 
 it('requires a board seat as well as exec.scenario.manage to save', function () {
@@ -212,7 +223,7 @@ it('requires a board seat as well as exec.scenario.manage to save', function () 
 
     $this->actingAs($manageOnly)->postJson('/exec/save-scenario', [...upsideDraft(), 'id' => 'board-upside'])->assertForbidden();
 
-    expect(StoredPortfolio::query()->count())->toBe(0);
+    expect(BeamParticle::query()->count())->toBe(0);
 });
 
 it('previews a draft in memory: the one query is the plans read, then the figures cost nothing', function () {
@@ -255,7 +266,7 @@ it('previews the same figures the Scenario lens shows once the draft is saved (a
     $asOf = CarbonImmutable::parse('2026-08-20 12:00:00');
     $preview = app(ScenarioBuilder::class)->preview(ScenarioDraftData::from(upsideDraft()), $asOf);
 
-    app(StoredPortfolios::class)->save(ScenarioSaveData::from([...upsideDraft(), 'id' => 'board-upside'])->toPortfolio('board-upside'));
+    app(StoredPortfolios::class)->save(ScenarioSaveData::from([...upsideDraft(), 'id' => 'board-upside'])->toPortfolio('board-upside'), $this->operator);
     nextScenarioRequest();
 
     $source = app(BoardLensResolver::class)->source(BoardLens::scenario('board-upside'), $asOf);
@@ -283,7 +294,7 @@ it('answers the preview over HTTP no-store, with no query beyond the session and
         ->and(collect($queries)->reject(fn (string $sql): bool => str_contains($sql, '"sessions"'))->values()->all())
         ->toHaveCount(1)
         ->and(collect($queries)->first(fn (string $sql): bool => ! str_contains($sql, '"sessions"')))->toContain('"plans"')
-        ->and(StoredPortfolio::query()->count())->toBe(0);
+        ->and(BeamParticle::query()->count())->toBe(0);
 });
 
 it('refuses a draft it cannot preview, with a 422 on the field', function (array $draft, string $field) {
@@ -313,10 +324,10 @@ it('saves a scenario that is a Scenario lens from the next request, logged to th
     $saved->assertOk();
     expect(collect($saved->json('data.scenarios'))->map(fn (array $s): array => [$s['id'], $s['source']])->all())
         ->toBe([['demo-mixed-book', 'file'], ['board-upside', 'stored']])
-        ->and(StoredPortfolio::query()->find('board-upside')?->label)->toBe('Board upside');
+        ->and(data_get(BeamParticle::query()->sole(), 'payload.portfolio.label'))->toBe('Board upside');
 
     $log = CentralActivityLog::query()->where('log_name', StoredPortfolios::LOG_NAME)->sole();
-    expect([$log->event, $log->subject_id, $log->causer_id])->toBe(['created', 'board-upside', $this->operator->id]);
+    expect([$log->event, $log->properties['scenario_key'], $log->causer_id])->toBe(['created', 'board-upside', $this->operator->id]);
 
     // Selectable at once: the bar lists it, the switch accepts it, and the board then reads it under the banner.
     nextScenarioRequest();
@@ -338,7 +349,7 @@ it('saves a scenario that is a Scenario lens from the next request, logged to th
 it('refuses to save under a file\'s id, an id that is not kebab-case, or an unknown blueprint, storing nothing', function (array $body, string $field) {
     $this->actingAs($this->operator)->postJson('/exec/save-scenario', $body)->assertUnprocessable()->assertJsonValidationErrors($field);
 
-    expect(StoredPortfolio::query()->count())->toBe(0)
+    expect(BeamParticle::query()->count())->toBe(0)
         ->and(CentralActivityLog::query()->count())->toBe(0);
 })->with([
     'the Demo file\'s id' => [[...upsideDraft(), 'id' => 'demo-mixed-book'], 'id'],
@@ -353,7 +364,7 @@ it('replaces a stored scenario saved again under its id', function () {
     nextScenarioRequest();
     $this->actingAs($this->operator)->postJson('/exec/save-scenario', [...upsideDraft(['label' => 'Board upside, revised']), 'id' => 'board-upside'])->assertOk();
 
-    expect(StoredPortfolio::query()->count())->toBe(1)
+    expect(BeamParticle::query()->count())->toBe(1)
         ->and(app(PortfolioRegistry::class)->get('board-upside')?->label)->toBe('Board upside, revised')
         ->and(CentralActivityLog::query()->orderBy('id')->pluck('event')->all())->toBe(['created', 'updated']);
 });
@@ -370,7 +381,7 @@ it('deletes a stored scenario, refuses a file or an unknown id, and a lens left 
     $deleted = $this->actingAs($this->operator)->postJson('/exec/delete-scenario', ['id' => 'board-upside']);
     $deleted->assertOk();
     expect(collect($deleted->json('data.scenarios'))->pluck('id')->all())->toBe(['demo-mixed-book'])
-        ->and(StoredPortfolio::query()->count())->toBe(0)
+        ->and(BeamParticle::query()->count())->toBe(0)
         ->and(CentralActivityLog::query()->orderBy('id')->pluck('event')->all())->toBe(['created', 'deleted']);
 
     nextScenarioRequest();
@@ -378,4 +389,13 @@ it('deletes a stored scenario, refuses a file or an unknown id, and a lens left 
         ->assertOk()
         ->assertJsonPath('data.mode', 'live')
         ->assertJsonPath('data.banner', null);
+});
+
+it('checks the same two entitlements on direct store mutations as on the scenario operations', function () {
+    $manageOnly = ScenarioBuilderUser::create(['id' => (string) Str::uuid(), 'email' => 'manage-only@beam.test']);
+    $portfolio = ScenarioSaveData::from([...upsideDraft(), 'id' => 'direct-store'])->toPortfolio('direct-store');
+    foreach ([$this->seat, $manageOnly, $this->member] as $actor) {
+        expect(fn () => app(StoredPortfolios::class)->save($portfolio, $actor))->toThrow(AuthorizationException::class);
+    }
+    expect(BeamParticle::query()->count())->toBe(0);
 });
