@@ -21,6 +21,10 @@ final class BoardMonth
         if (! is_string($value) || preg_match('/^[1-9][0-9]{3}-(0[1-9]|1[0-2])$/D', $value) !== 1) {
             return $asOf;
         }
+        if (($projection = $source->projection()) !== null && $value < $projection->anchor) {
+            // A thirteen-month Revenue reading cannot precede the projection's attested history.
+            return $asOf;
+        }
         $month = CarbonImmutable::createFromFormat('!Y-m', $value, $asOf->getTimezone());
 
         // The source cannot attest to a later month; unknown/malformed choices retain its current reading.

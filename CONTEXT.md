@@ -50,8 +50,8 @@ markup a plan charges on it. Revenue from usage is a separate figure.
 Chosen by the encrypted `beam_exec_lens` cookie; an absent or unknown value reads the default.
 
 **Stored scenario**:
-A scenario a board member saved with the **Scenario builder**: a beam-synthetic portfolio row in the central
-`beam_synthetic_portfolios` table (`StoredPortfolios`), read by `PortfolioRegistry` after the portfolio files. A
+A scenario a board member saved with the **Scenario builder**: a beam-synthetic central Data-declared particle
+in `beam_particles` (`StoredPortfolios`; chosen scenario key in payload, separate server UUID), read by `PortfolioRegistry` after the portfolio files. A
 declared portfolio (a file) always wins its id; a stored row is validated again whenever it is read. _Avoid_:
 "custom portfolio", "user scenario".
 

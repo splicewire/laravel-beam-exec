@@ -6,13 +6,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Splicewire\Beam\Commerce\Revenue\PartyPeriodRevenue;
 use Splicewire\Beam\Exec\Board\BoardCardBacking;
+use Splicewire\Beam\Exec\Board\BoardFacetOptions;
 use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\BoardSubscription;
 use Splicewire\Beam\Exec\Board\BoardTenant;
 use Splicewire\Beam\Exec\Board\BoardUsage;
+use Splicewire\Beam\Exec\Board\Sources\ProjectionBoardSource;
 use Splicewire\Beam\Exec\Posture\PostureSignal;
 use Splicewire\Beam\Exec\Tests\Support\InMemoryBoardSource;
 use Splicewire\Beam\Filters\ResourceFilters;
+use Splicewire\Beam\Synthetic\Projection\ProjectionAssumptions;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 it('serves each cards vocabulary through the shared filter schema', function () {
@@ -114,4 +117,27 @@ it('keeps the leading watermark on a filtered Frame page and reads no database',
     $this->getJson('/frame/resources/exec-mrr-trend?filter[observation]=forecast')
         ->assertOk()->assertJsonPath('data.0.id', 'synthesized')->assertJsonCount(1, 'data');
     expect($queries)->toBe([]);
+});
+
+it('keeps the projected Revenue reading when a month precedes its attestable window', function () {
+    $source = new ProjectionBoardSource(
+        new InMemoryBoardSource(revenue: [new PartyPeriodRevenue('a', '2026-07', 'pro', 10)]),
+        '2026-07',
+        new ProjectionAssumptions(horizonMonths: 3),
+    );
+    app()->instance(BoardSource::class, $source);
+    $backing = new BoardCardBacking('revenue');
+    $current = $backing->records([], null, 20)->items();
+    $outside = $backing->records(['month' => '2025-01'], null, 20)->items();
+    expect($outside[0]->id)->toBe('projected')
+        ->and(array_map(fn ($row) => $row->toArray(), $outside))->toBe(array_map(fn ($row) => $row->toArray(), $current));
+    expect($backing->records(['month' => '2026-07'], null, 20)->items()[0]->id)->toBe('projected');
+});
+
+it('does not ask a projection for tenant plan or status picker facts it cannot supply', function () {
+    app()->instance(BoardSource::class, new ProjectionBoardSource(
+        new InMemoryBoardSource, '2026-07', new ProjectionAssumptions(horizonMonths: 3),
+    ));
+    expect(BoardFacetOptions::choices('beam_exec_tenant_statuses'))->toBe([])
+        ->and(BoardFacetOptions::choices('beam_exec_tenant_plans'))->toBe([]);
 });

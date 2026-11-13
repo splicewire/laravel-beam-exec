@@ -74,17 +74,7 @@ beforeEach(function () {
         $t->uuid('batch_uuid')->nullable();
         $t->timestamps();
     });
-    Schema::create('beam_particles', function (Blueprint $table): void {
-        $table->uuid('id')->primary();
-        $table->string('schema_ref')->nullable();
-        $table->string('schema_id')->nullable();
-        $table->string('migration_status')->nullable();
-        $table->string('head_version')->nullable();
-        $table->string('source_tier')->default('local');
-        $table->json('payload');
-        $table->json('meta')->nullable();
-        $table->timestamps();
-    });
+    (require dirname(__DIR__, 2).'/vendor/splicewire/laravel-beam/database/migrations/shared/create_beam_particles_table.php.stub')->up();
     expect(Schema::hasTable('beam_synthetic_portfolios'))->toBeFalse();
     seedScenarioPlans();
 
@@ -328,6 +318,17 @@ it('saves a scenario that is a Scenario lens from the next request, logged to th
 
     $log = CentralActivityLog::query()->where('log_name', StoredPortfolios::LOG_NAME)->sole();
     expect([$log->event, $log->properties['scenario_key'], $log->causer_id])->toBe(['created', 'board-upside', $this->operator->id]);
+
+    // The provisional internal-read seam must remain open through the actual viewer operations.
+    nextScenarioRequest();
+    $viewerBar = $this->actingAs($this->seat)->getJson('/exec/lens')->assertOk();
+    expect(collect($viewerBar->json('data.scenarios'))->pluck('value')->all())->toContain('scenario:board-upside');
+    nextScenarioRequest();
+    $this->actingAs($this->seat)->postJson('/exec/switch-lens', ['lens' => 'scenario:board-upside'])
+        ->assertOk()->assertCookie(BoardLens::COOKIE, 'scenario:board-upside');
+    nextScenarioRequest();
+    $this->actingAs($this->seat)->getJson('/exec/scenarios')->assertOk()
+        ->assertJsonPath('data.canManage', false);
 
     // Selectable at once: the bar lists it, the switch accepts it, and the board then reads it under the banner.
     nextScenarioRequest();

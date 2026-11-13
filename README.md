@@ -274,9 +274,8 @@ covers the rules.
 
 **With the builder, at runtime.** Open **Scenarios** under the lens bar, compose a draft from your blueprints
 (counts, start offsets, rates), watch its revenue and MRR trend preview as you edit, then **Save as scenario**
-under a kebab-case id. The scenario is stored in beam-synthetic's `beam_synthetic_portfolios` table (publish its
-storage: Beam's existing central particle migrations), and it is a lens from
-the next request: the bar's scenario list and the panel's **Show on board** both choose it.
+under a kebab-case id. The scenario is stored as a central Data-declared particle in Beam's existing
+shared store, and it is a lens from the next request: the bar's scenario list and the panel's **Show on board** both choose it.
 
 Four declared operations on `exec-dashboard` serve the panel, all subject-free:
 
@@ -355,11 +354,6 @@ It registers into:
 beam-ux registers the realm's dashboard (`exec-dashboard`) into `beam.particle.resources` itself, as it
 does for every realm.
 
-## Testing
-
-Run `composer test`.
-
-
 ### Scenario particle storage — PROVISIONAL pending root d62cb04e
 
 Stored scenarios use Synthetic's declared CentralParticleBacking resource; no dedicated portfolio
@@ -374,3 +368,7 @@ This read/mutation policy seam is PROVISIONAL under coord04:29/04:36 pending roo
 Exec and Synthetic land together only after the ruling. Published-table hosts (commerce-starter
 and market-starter) must follow Synthetic's `docs/stored-portfolio-migration.md` lossless export,
 preflight, ability-checked import and verification before retiring their old table.
+
+## Testing
+
+Run `composer test`.

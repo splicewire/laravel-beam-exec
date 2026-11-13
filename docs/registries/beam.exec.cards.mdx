@@ -72,7 +72,7 @@ A card may also implement `FacetedBoardMetric`: `filterVocabulary(): FilterVocab
 
 The built-ins declare month (`YYYY-MM`) on Revenue, Usage and Growth; measured/forecast on MRR trend; tone on Posture and Risk; current provisioning status and plan on Tenants. Plan mix has no bar. Pickers use declared Options Sources through Frame's existing filter endpoint. Tenant plans and statuses come from the selected source; a brokered tenant uses its billing party's current plan. No new source read is required.
 
-A historical month measures through its end; the source's current month remains month-to-date. An invalid or future month retains the source's as-of reading. Choosing a month changes this card, not the board lens or other cards. Posture and Risk filter figure tones after measuring. A synthesized/projected filtered page retains its leading watermark even when no data figures match; an unfiltered empty card still has no summary. Dashboard summaries remain the default, unfiltered reading.
+A historical month measures through its end; the source's current month remains month-to-date. An invalid or future month, or a month before a Projection anchor, retains the source's as-of reading. Choosing a month changes this card, not the board lens or other cards. Posture and Risk filter figure tones after measuring. A synthesized/projected filtered page retains its leading watermark even when no data figures match; an unfiltered empty card still has no summary. Dashboard summaries remain the default, unfiltered reading.
 
 ## Writing a card
 

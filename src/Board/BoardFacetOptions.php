@@ -29,6 +29,9 @@ final class BoardFacetOptions
 
     private static function statuses(BoardSource $source): array
     {
+        if ($source->projection() !== null) {
+            return [];
+        }
         $values = [];
         foreach ($source->tenants() as $tenant) {
             $values[$tenant->status] = ucfirst($tenant->status);
@@ -40,6 +43,9 @@ final class BoardFacetOptions
 
     private static function plans(BoardSource $source): array
     {
+        if ($source->projection() !== null) {
+            return [];
+        }
         $values = [];
         foreach ($source->subscriptions() as $subscription) {
             if ($subscription->inForceAt($source->asOf())) {
