@@ -25,8 +25,8 @@ use Splicewire\Beam\Exec\Data\BoardFigureData;
  *    month.
  *
  * Neither is configurable (owner ruling D12). {@see BoardCardRegistry::figures()} applies them to every card on the
- * way out, so a card cannot leave them off, and a card that measures nothing stays empty rather than becoming a
- * lone watermark. The figure ids `synthesized` and `projected` are reserved: a card that emits one is refused.
+ * way out, so a card cannot leave them off. An unfiltered empty card stays empty; a filtered page keeps its
+ * watermark even when no figure matches. The figure ids `synthesized` and `projected` are reserved: a card that emits one is refused.
  */
 final class BoardWatermark
 {
@@ -44,7 +44,7 @@ final class BoardWatermark
      * @param  list<BoardFigureData>  $figures
      * @return list<BoardFigureData>
      */
-    public static function stamp(array $figures, BoardSource $source, string $card): array
+    public static function stamp(array $figures, BoardSource $source, string $card, bool $includeEmpty = false): array
     {
         foreach ($figures as $figure) {
             if ($figure->id === self::FIGURE || $figure->id === self::PROJECTED_FIGURE) {
@@ -52,7 +52,7 @@ final class BoardWatermark
             }
         }
 
-        if ($figures === []) {
+        if ($figures === [] && ! $includeEmpty) {
             return [];
         }
 

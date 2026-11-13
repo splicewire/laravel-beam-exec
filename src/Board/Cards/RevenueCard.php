@@ -2,14 +2,17 @@
 
 namespace Splicewire\Beam\Exec\Board\Cards;
 
+use Carbon\CarbonImmutable;
 use Schemastud\Frame\Data\SummaryFigureData;
 use Splicewire\Beam\Commerce\Money\MoneyPresenter;
 use Splicewire\Beam\Commerce\Revenue\RevenueMovements;
 use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
-use Splicewire\Beam\Exec\Board\BoardMetric;
+use Splicewire\Beam\Exec\Board\BoardMonth;
 use Splicewire\Beam\Exec\Board\BoardSource;
+use Splicewire\Beam\Exec\Board\FacetedBoardMetric;
 use Splicewire\Beam\Exec\Board\Figures;
 use Splicewire\Beam\Exec\Data\BoardFigureData;
+use Splicewire\Beam\Particle\Backing\FilterVocabulary;
 
 /**
  * Recurring revenue and how it moved: MRR and ARR now, this month's new, expansion, contraction and churned MRR,
@@ -34,14 +37,24 @@ use Splicewire\Beam\Exec\Data\BoardFigureData;
     order: 15,
     projects: true,
 )]
-final class RevenueCard implements BoardMetric
+final class RevenueCard implements FacetedBoardMetric
 {
     /** The months read: the as-of month and the twelve before it. */
     public const MONTHS = 13;
 
+    public function filterVocabulary(): FilterVocabulary
+    {
+        return BoardMonth::vocabulary();
+    }
+
     public function measure(BoardSource $source): array
     {
-        $months = self::months($source);
+        return $this->measureFiltered($source, []);
+    }
+
+    public function measureFiltered(BoardSource $source, array $filters): array
+    {
+        $months = self::months($source, BoardMonth::at($source, $filters));
         $now = end($months);
         $movements = RevenueMovements::from($months, $source->revenue($months));
         $month = $movements->movement($now);
@@ -89,9 +102,9 @@ final class RevenueCard implements BoardMetric
     }
 
     /** @return list<string> the {@see MONTHS} months ending with the as-of month, ascending */
-    public static function months(BoardSource $source): array
+    public static function months(BoardSource $source, ?CarbonImmutable $asOf = null): array
     {
-        $end = $source->asOf()->startOfMonth();
+        $end = ($asOf ?? $source->asOf())->startOfMonth();
 
         return array_map(
             fn (int $back): string => $end->subMonthsNoOverflow($back)->format('Y-m'),

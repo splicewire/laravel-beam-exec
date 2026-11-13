@@ -5,11 +5,13 @@ namespace Splicewire\Beam\Exec\Board\Cards;
 use Schemastud\Frame\Data\SummaryFigureData;
 use Splicewire\Beam\Commerce\Money\MoneyPresenter;
 use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
-use Splicewire\Beam\Exec\Board\BoardMetric;
+use Splicewire\Beam\Exec\Board\BoardMonth;
 use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\BoardUsage;
+use Splicewire\Beam\Exec\Board\FacetedBoardMetric;
 use Splicewire\Beam\Exec\Board\Figures;
 use Splicewire\Beam\Exec\Data\BoardFigureData;
+use Splicewire\Beam\Particle\Backing\FilterVocabulary;
 
 /**
  * What the platform spends on its tenants' metered usage: the provider cost this month to date, against last
@@ -24,11 +26,21 @@ use Splicewire\Beam\Exec\Data\BoardFigureData;
     icon: 'Gauge',
     order: 35,
 )]
-final class UsageCard implements BoardMetric
+final class UsageCard implements FacetedBoardMetric
 {
+    public function filterVocabulary(): FilterVocabulary
+    {
+        return BoardMonth::vocabulary();
+    }
+
     public function measure(BoardSource $source): array
     {
-        $now = $source->asOf();
+        return $this->measureFiltered($source, []);
+    }
+
+    public function measureFiltered(BoardSource $source, array $filters): array
+    {
+        $now = BoardMonth::at($source, $filters);
         $current = $source->usage(Figures::month($now));
         $previous = $source->usage(Figures::previousMonth($now));
 

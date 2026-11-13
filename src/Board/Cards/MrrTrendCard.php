@@ -6,10 +6,12 @@ use Carbon\CarbonImmutable;
 use Schemastud\Frame\Attributes\WidgetIn;
 use Splicewire\Beam\Commerce\Revenue\RevenueMovements;
 use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
-use Splicewire\Beam\Exec\Board\BoardMetric;
 use Splicewire\Beam\Exec\Board\BoardSource;
+use Splicewire\Beam\Exec\Board\FacetedBoardMetric;
 use Splicewire\Beam\Exec\Board\Figures;
 use Splicewire\Beam\Exec\Data\BoardFigureData;
+use Splicewire\Beam\Particle\Backing\DeclaredFacet;
+use Splicewire\Beam\Particle\Backing\FilterVocabulary;
 
 /**
  * MRR month by month: one figure per month, oldest first, drawn on the dashboard as `@schemastud/frame`'s
@@ -32,8 +34,24 @@ use Splicewire\Beam\Exec\Data\BoardFigureData;
     projects: true,
 )]
 #[WidgetIn('summary', 'trend-card')]
-final class MrrTrendCard implements BoardMetric
+final class MrrTrendCard implements FacetedBoardMetric
 {
+    public function filterVocabulary(): FilterVocabulary
+    {
+        return FilterVocabulary::of(DeclaredFacet::exact('observation', options: 'beam_exec_observations')->titled('Measured or forecast'));
+    }
+
+    public function measureFiltered(BoardSource $source, array $filters): array
+    {
+        $rows = $this->measure($source);
+        $kind = $filters['observation'] ?? null;
+        if (! in_array($kind, ['measured', 'forecast'], true)) {
+            return $rows;
+        }
+
+        return array_values(array_filter($rows, fn (BoardFigureData $row): bool => (bool) $row->forecast === ($kind === 'forecast')));
+    }
+
     public function measure(BoardSource $source): array
     {
         $months = RevenueCard::months($source);

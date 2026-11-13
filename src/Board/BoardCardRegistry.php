@@ -130,7 +130,7 @@ class BoardCardRegistry implements Gated, Registry
      *
      * @return list<BoardFigureData>
      */
-    public function figures(BoardCardDefinition $definition, BoardSource $source): array
+    public function figures(BoardCardDefinition $definition, BoardSource $source, array $filters = []): array
     {
         BoardLensBar::mark($this->container->bound('request') ? $this->container->make('request') : null, $source);
 
@@ -138,7 +138,10 @@ class BoardCardRegistry implements Gated, Registry
             return [];
         }
 
-        return BoardWatermark::stamp($this->metric($definition)->measure($source), $source, $definition->key());
+        $metric = $this->metric($definition);
+        $rows = $metric instanceof FacetedBoardMetric ? $metric->measureFiltered($source, $filters) : $metric->measure($source);
+
+        return BoardWatermark::stamp($rows, $source, $definition->key(), includeEmpty: $metric instanceof FacetedBoardMetric && $filters !== []);
     }
 
     public function has(RegistryKey|string $key): bool

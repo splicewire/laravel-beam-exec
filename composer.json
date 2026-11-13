@@ -20,6 +20,7 @@
         "php": "^8.3",
         "illuminate/contracts": "^11.0|^12.0|^13.0",
         "illuminate/support": "^11.0|^12.0|^13.0",
+        "rushing/laravel-data-filters": "*",
         "rushing/laravel-doctor": "*",
         "rushing/php-popcorn": "dev-main",
         "schemastud/laravel-data-schemas": "*",

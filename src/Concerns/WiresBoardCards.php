@@ -2,6 +2,7 @@
 
 namespace Splicewire\Beam\Exec\Concerns;
 
+use Rushing\DataFilters\DataFilterManager;
 use Rushing\Popcorn\Concerns\Chained;
 use Schemastud\Frame\Contracts\ResourceContextContributor;
 use Splicewire\Beam\Exec\BeamExecServiceProvider;
@@ -10,6 +11,7 @@ use Splicewire\Beam\Exec\Board\BoardCardContextNodes;
 use Splicewire\Beam\Exec\Board\BoardCardDefinition;
 use Splicewire\Beam\Exec\Board\BoardCardRegistry;
 use Splicewire\Beam\Exec\Board\BoardCardSummaryProvider;
+use Splicewire\Beam\Exec\Board\BoardFacetOptions;
 use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\Lens\BoardLens;
 use Splicewire\Beam\Exec\Board\Lens\BoardLensResolver;
@@ -84,6 +86,13 @@ trait WiresBoardCards
     {
         if (! $this->app->bound(ParticleResourceRegistry::class)) {
             return;
+        }
+
+        foreach (BoardFacetOptions::HANDLES as $handle) {
+            $this->app->make(DataFilterManager::class)->options(
+                $handle,
+                static fn (?string $search = null): array => BoardFacetOptions::choices($handle, $search),
+            );
         }
 
         $this->registerBoardCardResources();

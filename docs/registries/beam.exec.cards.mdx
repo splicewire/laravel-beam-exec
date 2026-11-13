@@ -66,6 +66,14 @@ Add cards in config or in `register()`. The exec package turns cards into resour
 boots, which is before your route file mounts the board. A card added from a provider's `boot()`
 still reaches the dashboard, but the board's console may not have a URL for its page.
 
+## Card facets
+
+A card may also implement `FacetedBoardMetric`: `filterVocabulary(): FilterVocabulary` declares its panel, and `measureFiltered(BoardSource $source, array $filters): array` receives the flat `filter[...]` values. Ordinary `BoardMetric` implementations need no change and show no facet bar. Return only data figures; the registry stamps the source watermark after filtering.
+
+The built-ins declare month (`YYYY-MM`) on Revenue, Usage and Growth; measured/forecast on MRR trend; tone on Posture and Risk; current provisioning status and plan on Tenants. Plan mix has no bar. Pickers use declared Options Sources through Frame's existing filter endpoint. Tenant plans and statuses come from the selected source; a brokered tenant uses its billing party's current plan. No new source read is required.
+
+A historical month measures through its end; the source's current month remains month-to-date. An invalid or future month retains the source's as-of reading. Choosing a month changes this card, not the board lens or other cards. Posture and Risk filter figure tones after measuring. A synthesized/projected filtered page retains its leading watermark even when no data figures match; an unfiltered empty card still has no summary. Dashboard summaries remain the default, unfiltered reading.
+
 ## Writing a card
 
 Run `artisan splicewire:beam:exec:make-card PipelineCard` to generate one, or write it by hand. A

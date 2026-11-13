@@ -4,9 +4,10 @@ namespace Splicewire\Beam\Exec\Board\Cards;
 
 use Schemastud\Frame\Data\SummaryFigureData;
 use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
-use Splicewire\Beam\Exec\Board\BoardMetric;
 use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\BoardTenant;
+use Splicewire\Beam\Exec\Board\FacetedBoardMetric;
+use Splicewire\Beam\Exec\Board\FiltersByTone;
 use Splicewire\Beam\Exec\Data\BoardFigureData;
 use Splicewire\Beam\Exec\Posture\PostureSignal;
 
@@ -30,8 +31,10 @@ use Splicewire\Beam\Exec\Posture\PostureSignal;
     icon: 'TriangleAlert',
     order: 50,
 )]
-final class RiskCard implements BoardMetric
+final class RiskCard implements FacetedBoardMetric
 {
+    use FiltersByTone;
+
     public function measure(BoardSource $source): array
     {
         $tenants = $source->tenants();

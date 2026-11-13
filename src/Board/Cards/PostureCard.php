@@ -6,8 +6,9 @@ use Carbon\CarbonInterface;
 use Rushing\Doctor\DoctorStatus;
 use Schemastud\Frame\Data\SummaryFigureData;
 use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
-use Splicewire\Beam\Exec\Board\BoardMetric;
 use Splicewire\Beam\Exec\Board\BoardSource;
+use Splicewire\Beam\Exec\Board\FacetedBoardMetric;
+use Splicewire\Beam\Exec\Board\FiltersByTone;
 use Splicewire\Beam\Exec\Data\BoardFigureData;
 use Splicewire\Beam\Exec\Posture\PostureRegistry;
 use Splicewire\Beam\Exec\Posture\PostureSignal;
@@ -32,8 +33,10 @@ use Splicewire\Beam\Exec\Posture\PostureSignal;
     icon: 'ShieldCheck',
     order: 40,
 )]
-final class PostureCard implements BoardMetric
+final class PostureCard implements FacetedBoardMetric
 {
+    use FiltersByTone;
+
     public function measure(BoardSource $source): array
     {
         $signals = $source->posture();

@@ -5,11 +5,13 @@ namespace Splicewire\Beam\Exec\Board\Cards;
 use Carbon\CarbonImmutable;
 use Schemastud\Frame\Data\SummaryFigureData;
 use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
-use Splicewire\Beam\Exec\Board\BoardMetric;
+use Splicewire\Beam\Exec\Board\BoardMonth;
 use Splicewire\Beam\Exec\Board\BoardSource;
 use Splicewire\Beam\Exec\Board\BoardTenant;
+use Splicewire\Beam\Exec\Board\FacetedBoardMetric;
 use Splicewire\Beam\Exec\Board\Figures;
 use Splicewire\Beam\Exec\Data\BoardFigureData;
+use Splicewire\Beam\Particle\Backing\FilterVocabulary;
 
 /**
  * How fast the tenant base is growing: this month against the base it started the month with, the year against
@@ -26,12 +28,22 @@ use Splicewire\Beam\Exec\Data\BoardFigureData;
     icon: 'TrendingUp',
     order: 20,
 )]
-final class GrowthCard implements BoardMetric
+final class GrowthCard implements FacetedBoardMetric
 {
+    public function filterVocabulary(): FilterVocabulary
+    {
+        return BoardMonth::vocabulary();
+    }
+
     public function measure(BoardSource $source): array
     {
+        return $this->measureFiltered($source, []);
+    }
+
+    public function measureFiltered(BoardSource $source, array $filters): array
+    {
         $tenants = $source->tenants();
-        $now = $source->asOf();
+        $now = BoardMonth::at($source, $filters);
         $monthStart = $now->startOfMonth();
         $lastMonthStart = $monthStart->subMonth();
         $yearAgo = $now->subYear();

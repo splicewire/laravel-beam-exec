@@ -80,6 +80,8 @@ lens bar" and "Scenarios" below.
 
 ## Cards
 
+Card pages declare facets through the optional `FacetedBoardMetric` contract: month on Revenue/Usage/Growth, measured or forecast on MRR trend, tone on Posture/Risk, and current plan/status on Tenants. Plan mix has no bar. Frame reads the declared vocabulary and passes `filter[...]` values to the card; the registry applies watermarks afterward, including an empty filtered synthetic page. See [card facets](docs/registries/beam.exec.cards.mdx#card-facets).
+
 Each card is a class that measures a few figures through a `BoardSource`:
 
 ```php
@@ -215,7 +217,7 @@ is not marked synthesized, and it is never unmarked either.
 The bar is a segmented switch over the four lenses, a list of every scenario the board can show (choosing one
 sets `scenario:<id>`, drawn with the `@schemastud/ui` select). It draws no band: under Scenario or Projection the page
 is marked by the checked lens, the scenario's name in the picker, and the watermark figure that leads each card
-(ADR-0004 clause 5, amended 2026-11-12). A card that measured nothing under those lenses has no figure and so no mark.
+(ADR-0004 clause 5, amended 2026-11-12). An unfiltered card that measured nothing under those lenses has no figure and so no mark; a filtered page retains its watermark even if no data figure matches.
 
 Two declared operations on the `exec-dashboard` resource serve it, both subject-free and gated by `exec.view`:
 
