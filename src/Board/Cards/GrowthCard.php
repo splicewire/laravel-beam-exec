@@ -65,29 +65,29 @@ final class GrowthCard implements FacetedBoardMetric
         return [
             new BoardFigureData(
                 id: 'month-growth',
-                label: 'Growth this month',
+                label: __('beam-exec::messages.labels_growth_this_month'),
                 value: Figures::signedPercent($growth),
                 tone: ($growth ?? 0.0) > 0 ? SummaryFigureData::TONE_ACTIVE : null,
             ),
             new BoardFigureData(
                 id: 'new-this-month',
-                label: 'New this month',
+                label: __('beam-exec::messages.labels_new_this_month'),
                 value: $arrivedIn($monthStart->subMicrosecond(), $now),
                 tone: SummaryFigureData::TONE_BUSY,
             ),
             new BoardFigureData(
                 id: 'new-last-month',
-                label: 'New last month',
+                label: __('beam-exec::messages.labels_new_last_month'),
                 value: $arrivedIn($lastMonthStart->subMicrosecond(), $monthStart->subMicrosecond()),
             ),
             new BoardFigureData(
                 id: 'new-12-months',
-                label: 'New in the last 12 months',
+                label: __('beam-exec::messages.labels_new_in_the_last_12_months'),
                 value: $arrivedIn($yearAgo, $now),
             ),
             new BoardFigureData(
                 id: 'year-growth',
-                label: 'Growth over 12 months',
+                label: __('beam-exec::messages.labels_growth_over_12_months'),
                 value: Figures::signedPercent(Figures::change($baseAt($yearAgo), $current)),
             ),
         ];

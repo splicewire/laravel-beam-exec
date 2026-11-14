@@ -4,17 +4,19 @@ namespace Splicewire\Beam\Exec\Ops;
 
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Splicewire\Beam\Exec\Board\Lens\BoardLens;
 use Splicewire\Beam\Exec\Board\Scenarios\ScenarioBuilder;
 use Splicewire\Beam\Exec\Data\ScenarioCatalogData;
 use Splicewire\Beam\Exec\Data\ScenarioSaveData;
+use Splicewire\Beam\Exec\Localization\ExecAccessDeniedException;
+use Splicewire\Beam\Exec\Localization\ExecError;
+use Splicewire\Beam\Exec\Localization\ExecInvalidArgumentException;
 use Splicewire\Beam\Exec\Realm\ExecRealm;
+use Splicewire\Beam\Localization\CodedValidationException;
 use Splicewire\Beam\Particle\Attributes\ParticleOp;
 use Splicewire\Beam\Particle\OperationKind;
 use Splicewire\Beam\Particle\Subject\NoSubject;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Store a scenario under an id, so the board can show it as `scenario:<id>` from the next request. Scaffolded with
@@ -46,7 +48,7 @@ class SaveScenario
     public static function handle(mixed $model, Request $request, mixed $actor): ScenarioCatalogData
     {
         if (! app(Gate::class)->forUser($actor)->allows('entitlement:'.ExecRealm::ENTITLEMENT)) {
-            throw new AccessDeniedHttpException('Saving a scenario needs a board seat (exec.view).');
+            throw new ExecAccessDeniedException(ExecError::SaveBoardSeat);
         }
 
         $input = ScenarioSaveData::validateAndCreate($request->all());
@@ -54,8 +56,10 @@ class SaveScenario
 
         try {
             $builder->save($input, $actor);
+        } catch (ExecInvalidArgumentException $e) {
+            throw CodedValidationException::for('id', $e->error, $e->params);
         } catch (InvalidArgumentException $e) {
-            throw ValidationException::withMessages(['id' => $e->getMessage()]);
+            throw CodedValidationException::for('id', ExecError::ScenarioSaveInvalid, ['detail' => $e->getMessage()]);
         }
 
         return $builder->catalog($actor, app(BoardLens::class));

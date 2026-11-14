@@ -11,8 +11,8 @@ final class BoardFacetOptions
     public static function choices(string $handle, ?string $search = null): array
     {
         $values = match ($handle) {
-            'beam_exec_tones' => ['active' => 'Active', 'busy' => 'Busy', 'warn' => 'Warning', 'danger' => 'Danger', 'neutral' => 'Neutral'],
-            'beam_exec_observations' => ['measured' => 'Measured', 'forecast' => 'Forecast'],
+            'beam_exec_tones' => ['active' => __('beam-exec::messages.facet_active'), 'busy' => __('beam-exec::messages.facet_busy'), 'warn' => __('beam-exec::messages.facet_warning'), 'danger' => __('beam-exec::messages.facet_danger'), 'neutral' => __('beam-exec::messages.facet_neutral')],
+            'beam_exec_observations' => ['measured' => __('beam-exec::messages.facet_measured'), 'forecast' => __('beam-exec::messages.facet_forecast')],
             'beam_exec_tenant_statuses' => self::statuses(app(BoardSource::class)),
             'beam_exec_tenant_plans' => self::plans(app(BoardSource::class)),
             default => [],
@@ -34,7 +34,13 @@ final class BoardFacetOptions
         }
         $values = [];
         foreach ($source->tenants() as $tenant) {
-            $values[$tenant->status] = ucfirst($tenant->status);
+            $values[$tenant->status] = match ($tenant->status) {
+                'pending' => __('beam-exec::messages.status_pending'),
+                'provisioning' => __('beam-exec::messages.status_provisioning'),
+                'active' => __('beam-exec::messages.status_active'),
+                'failed' => __('beam-exec::messages.status_failed'),
+                default => ucfirst($tenant->status),
+            };
         }
         ksort($values);
 

@@ -64,28 +64,28 @@ final class UsageCard implements FacetedBoardMetric
         return [
             new BoardFigureData(
                 id: 'cost-this-month',
-                label: 'Usage cost, month to date',
+                label: __('beam-exec::messages.labels_usage_cost_month_to_date'),
                 value: MoneyPresenter::format($thisMonth, 'cost'),
             ),
             new BoardFigureData(
                 id: 'cost-last-month',
-                label: 'Usage cost last month',
+                label: __('beam-exec::messages.labels_usage_cost_last_month'),
                 value: MoneyPresenter::format($lastMonth, 'cost'),
             ),
             new BoardFigureData(
                 id: 'cost-change',
-                label: 'Against last month',
+                label: __('beam-exec::messages.labels_against_last_month'),
                 value: Figures::signedPercent(Figures::change($lastMonth, $thisMonth)),
             ),
             new BoardFigureData(
                 id: 'active-tenants',
-                label: 'Tenants with usage',
+                label: __('beam-exec::messages.labels_tenants_with_usage'),
                 value: count($active),
                 tone: $active === [] ? null : SummaryFigureData::TONE_ACTIVE,
             ),
             new BoardFigureData(
                 id: 'top-meter',
-                label: 'Costliest meter',
+                label: __('beam-exec::messages.labels_costliest_meter'),
                 value: $top ?? Figures::UNDEFINED,
             ),
         ];

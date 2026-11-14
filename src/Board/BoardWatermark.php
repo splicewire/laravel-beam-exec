@@ -60,7 +60,7 @@ final class BoardWatermark
 
         if ($from !== null) {
             return [
-                new BoardFigureData(id: self::FIGURE, label: self::TEXT, value: $from, tone: SummaryFigureData::TONE_WARN, synthesized: true),
+                new BoardFigureData(id: self::FIGURE, label: __('beam-exec::messages.watermark_synthesized_not_real_data'), value: $from, tone: SummaryFigureData::TONE_WARN, synthesized: true),
                 ...array_map(fn (BoardFigureData $figure): BoardFigureData => $figure->marked(synthesized: true), array_values($figures)),
             ];
         }
@@ -69,7 +69,7 @@ final class BoardWatermark
 
         if ($projection !== null) {
             return [
-                new BoardFigureData(id: self::PROJECTED_FIGURE, label: self::PROJECTED_TEXT, value: $projection->describe(), tone: SummaryFigureData::TONE_WARN, projected: true),
+                new BoardFigureData(id: self::PROJECTED_FIGURE, label: __('beam-exec::messages.watermark_projected_not_real_data'), value: $projection->describe(), tone: SummaryFigureData::TONE_WARN, projected: true),
                 ...array_map(fn (BoardFigureData $figure): BoardFigureData => $figure->marked(projected: true), array_values($figures)),
             ];
         }

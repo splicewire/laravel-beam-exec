@@ -3,11 +3,13 @@
 namespace Splicewire\Beam\Exec\Data;
 
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
+use Splicewire\Beam\Exec\Localization\ExecValidationException;
 use Splicewire\Beam\Exec\Ops\PreviewScenario;
 use Splicewire\Beam\Synthetic\Blueprints\BlueprintRegistry;
 use Splicewire\Beam\Synthetic\Data\PortfolioMemberData;
@@ -46,6 +48,12 @@ class ScenarioDraftData extends BeamData
         public ?float $expansionRate = null,
     ) {}
 
+    public static function withValidator(Validator $validator): void
+    {
+        parent::withValidator($validator);
+        $validator->setException(ExecValidationException::class);
+    }
+
     /** @return array<string, list<mixed>> */
     public static function rules(): array
     {
@@ -64,7 +72,7 @@ class ScenarioDraftData extends BeamData
     public static function messages(): array
     {
         return [
-            'members.*.blueprint.in' => 'Choose a blueprint this host declares.',
+            'members.*.blueprint.in' => __('beam-exec::messages.validation_choose_a_blueprint_this_host_declares'),
         ];
     }
 

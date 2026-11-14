@@ -44,7 +44,7 @@ class ScenarioSaveData extends ScenarioDraftData
         return [
             'id' => ['required', 'string', 'max:'.StoredPortfolios::ID_MAX, 'regex:'.StoredPortfolios::ID_PATTERN, function (string $attribute, mixed $value, Closure $fail): void {
                 if (is_string($value) && app(PortfolioRegistry::class)->declares($value)) {
-                    $fail('That id belongs to a portfolio the host declares in a file. Choose another id.');
+                    $fail(__('beam-exec::messages.validation_that_id_belongs_to_a_portfolio_the_host_declares_in_a_file_choose_another_id'));
                 }
             }],
             ...parent::rules(),
@@ -55,7 +55,7 @@ class ScenarioSaveData extends ScenarioDraftData
     public static function messages(): array
     {
         return [
-            'id.regex' => 'Use lowercase letters, digits and single hyphens (for example board-upside).',
+            'id.regex' => __('beam-exec::messages.validation_use_lowercase_letters_digits_and_single_hyphens_for_example_board_upside'),
             ...parent::messages(),
         ];
     }

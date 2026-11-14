@@ -3,12 +3,14 @@
 namespace Splicewire\Beam\Exec\Ops;
 
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Splicewire\Beam\Exec\Board\Lens\BoardLensBar;
 use Splicewire\Beam\Exec\Board\Scenarios\ScenarioBuilder;
 use Splicewire\Beam\Exec\Data\ScenarioDraftData;
 use Splicewire\Beam\Exec\Data\ScenarioPreviewData;
+use Splicewire\Beam\Exec\Localization\ExecError;
+use Splicewire\Beam\Exec\Localization\ExecInvalidArgumentException;
+use Splicewire\Beam\Localization\CodedValidationException;
 use Splicewire\Beam\Particle\Attributes\ParticleOp;
 use Splicewire\Beam\Particle\OperationKind;
 use Splicewire\Beam\Particle\Subject\NoSubject;
@@ -46,8 +48,10 @@ class PreviewScenario
 
         try {
             return app(ScenarioBuilder::class)->preview($draft);
+        } catch (ExecInvalidArgumentException $e) {
+            throw CodedValidationException::for('members', $e->error, $e->params);
         } catch (InvalidArgumentException $e) {
-            throw ValidationException::withMessages(['members' => $e->getMessage()]);
+            throw CodedValidationException::for('members', ExecError::ScenarioPreviewInvalid, ['detail' => $e->getMessage()]);
         }
     }
 }

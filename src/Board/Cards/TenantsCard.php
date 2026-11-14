@@ -63,22 +63,22 @@ final class TenantsCard implements FacetedBoardMetric
         $count = fn (callable $test): int => count(array_filter($tenants, $test));
 
         return [
-            new BoardFigureData(id: 'total', label: 'Tenants', value: count($tenants)),
+            new BoardFigureData(id: 'total', label: __('beam-exec::messages.labels_tenants'), value: count($tenants)),
             new BoardFigureData(
                 id: 'active',
-                label: 'Active',
+                label: __('beam-exec::messages.labels_active'),
                 value: $count(fn (BoardTenant $t): bool => $t->isActive() && ! $t->suspended),
                 tone: SummaryFigureData::TONE_ACTIVE,
             ),
             new BoardFigureData(
                 id: 'new',
-                label: 'New this month',
+                label: __('beam-exec::messages.labels_new_this_month'),
                 value: $count(fn (BoardTenant $t): bool => $t->createdAt !== null && $t->createdAt->gte($monthStart)),
                 tone: SummaryFigureData::TONE_BUSY,
             ),
             new BoardFigureData(
                 id: 'synthetic',
-                label: 'Synthetic',
+                label: __('beam-exec::messages.labels_synthetic'),
                 value: $count(fn (BoardTenant $t): bool => $t->synthetic),
             ),
         ];

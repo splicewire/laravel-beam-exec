@@ -52,16 +52,16 @@ final class RiskCard implements FacetedBoardMetric
         return [
             new BoardFigureData(
                 id: 'open',
-                label: 'Open risks',
+                label: __('beam-exec::messages.labels_open_risks'),
                 value: $open,
                 tone: $open > 0 ? SummaryFigureData::TONE_DANGER : $calm,
             ),
-            new BoardFigureData(id: 'suspended', label: 'Suspended tenants', value: $suspended, tone: $tone($suspended)),
-            new BoardFigureData(id: 'failed-provisioning', label: 'Failed provisioning', value: $failed, tone: $tone($failed)),
+            new BoardFigureData(id: 'suspended', label: __('beam-exec::messages.labels_suspended_tenants'), value: $suspended, tone: $tone($suspended)),
+            new BoardFigureData(id: 'failed-provisioning', label: __('beam-exec::messages.labels_failed_provisioning'), value: $failed, tone: $tone($failed)),
             new BoardFigureData(
                 id: 'failing-checks',
-                label: 'Failing checks',
-                value: $measured ? $failing : 'Unmeasured',
+                label: __('beam-exec::messages.labels_failing_checks'),
+                value: $measured ? $failing : __('beam-exec::messages.labels_unmeasured'),
                 tone: $tone($failing),
             ),
         ];

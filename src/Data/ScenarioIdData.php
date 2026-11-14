@@ -3,10 +3,12 @@
 namespace Splicewire\Beam\Exec\Data;
 
 use Closure;
+use Illuminate\Validation\Validator;
 use Schemastud\DataSchemas\Attributes\Description;
 use Schemastud\DataSchemas\Attributes\Title;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 use Splicewire\Beam\Data\BeamData;
+use Splicewire\Beam\Exec\Localization\ExecValidationException;
 use Splicewire\Beam\Exec\Ops\DeleteScenario;
 use Splicewire\Beam\Synthetic\Blueprints\PortfolioRegistry;
 
@@ -22,6 +24,12 @@ class ScenarioIdData extends BeamData
         public string $id,
     ) {}
 
+    public static function withValidator(Validator $validator): void
+    {
+        parent::withValidator($validator);
+        $validator->setException(ExecValidationException::class);
+    }
+
     /** @return array<string, list<mixed>> */
     public static function rules(): array
     {
@@ -34,9 +42,9 @@ class ScenarioIdData extends BeamData
                 $portfolios = app(PortfolioRegistry::class);
 
                 if ($portfolios->declares($value)) {
-                    $fail('That scenario is declared by the host in a file; remove the file to remove it.');
+                    $fail(__('beam-exec::messages.validation_that_scenario_is_declared_by_the_host_in_a_file_remove_the_file_to_remove_it'));
                 } elseif (! $portfolios->isStored($value)) {
-                    $fail('There is no stored scenario with that id.');
+                    $fail(__('beam-exec::messages.validation_there_is_no_stored_scenario_with_that_id'));
                 }
             }],
         ];

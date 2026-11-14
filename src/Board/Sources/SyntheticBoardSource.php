@@ -3,7 +3,6 @@
 namespace Splicewire\Beam\Exec\Board\Sources;
 
 use Carbon\CarbonImmutable;
-use InvalidArgumentException;
 use Rushing\Commerce\Billing\BillingPeriod;
 use Splicewire\Beam\Commerce\Billing\MeterMeasure;
 use Splicewire\Beam\Commerce\Billing\MeterRegistry;
@@ -18,6 +17,8 @@ use Splicewire\Beam\Exec\Board\BoardSubscription;
 use Splicewire\Beam\Exec\Board\BoardTenant;
 use Splicewire\Beam\Exec\Board\BoardUsage;
 use Splicewire\Beam\Exec\Board\Lens\BoardLensMode;
+use Splicewire\Beam\Exec\Localization\ExecError;
+use Splicewire\Beam\Exec\Localization\ExecInvalidArgumentException;
 use Splicewire\Beam\Synthetic\Data\ScenarioMonthData;
 use Splicewire\Beam\Synthetic\Roster\RosterMember;
 use Splicewire\Beam\Synthetic\Roster\ScenarioProjector;
@@ -183,16 +184,15 @@ final class SyntheticBoardSource implements BoardSource
         }
 
         if ($unpriced !== []) {
-            throw new InvalidArgumentException(sprintf(
-                "The scenario '%s' cannot be priced: this host has no plan with the slug %s. Its price list has: %s.",
-                $this->label,
-                implode(', ', array_map(
-                    fn (string $slug, array $ids): string => sprintf("'%s' (named by %s)", $slug, implode(', ', array_unique($ids))),
+            throw new ExecInvalidArgumentException(ExecError::ScenarioUnpriced, [
+                'scenario' => $this->label,
+                'plans' => implode(', ', array_map(
+                    fn (string $slug, array $ids): string => __('beam-exec::messages.scenario_plan_reference', ['slug' => $slug, 'blueprints' => implode(', ', array_unique($ids))]),
                     array_keys($unpriced),
                     $unpriced,
                 )),
-                $this->plans === [] ? '(none)' : implode(', ', array_keys($this->plans)),
-            ));
+                'available' => $this->plans === [] ? __('beam-exec::messages.scenario_no_plans') : implode(', ', array_keys($this->plans)),
+            ]);
         }
 
         usort($rows, fn (PartyPeriodRevenue $a, PartyPeriodRevenue $b): int => [$a->partyId, $a->period] <=> [$b->partyId, $b->period]);

@@ -52,13 +52,18 @@ final class BoardProjection
     {
         $months = $this->horizon();
 
-        return sprintf(
-            '%s, %s held flat, %d %s ahead%s',
-            ucfirst($this->basis),
-            self::month($this->anchor)->format('F Y'),
+        return trans_choice(
+            $this->rates === null ? 'beam-exec::messages.projection' : 'beam-exec::messages.projection_rates',
             $months,
-            $months === 1 ? 'month' : 'months',
-            $this->rates === null ? '' : " at {$this->rates}'s rates",
+            [
+                'basis' => match ($this->basis) {
+                    'live' => __('beam-exec::messages.lens_live'),
+                    'truth' => __('beam-exec::messages.lens_truth'),
+                    default => $this->basis,
+                },
+                'month' => self::month($this->anchor)->locale(app()->getLocale())->translatedFormat('F Y'),
+                'rates' => $this->rates ?? '',
+            ],
         );
     }
 

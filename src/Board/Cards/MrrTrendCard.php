@@ -59,7 +59,7 @@ final class MrrTrendCard implements FacetedBoardMetric
 
         return array_map(fn (string $month): BoardFigureData => new BoardFigureData(
             id: $month,
-            label: CarbonImmutable::createFromFormat('!Y-m', $month)->format('M Y'),
+            label: __('beam-exec::messages.month_label', ['month' => CarbonImmutable::createFromFormat('!Y-m', $month)->locale(app()->getLocale())->translatedFormat('M Y')]),
             value: $movements->mrr($month),
             forecast: Figures::forecast($source, $month),
         ), $months);

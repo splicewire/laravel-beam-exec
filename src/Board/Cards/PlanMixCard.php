@@ -66,7 +66,7 @@ final class PlanMixCard implements BoardMetric
         $figures = [
             new BoardFigureData(
                 id: 'subscribed',
-                label: 'On a plan',
+                label: __('beam-exec::messages.labels_on_a_plan'),
                 value: count($subscribed),
                 tone: SummaryFigureData::TONE_ACTIVE,
             ),
@@ -78,16 +78,16 @@ final class PlanMixCard implements BoardMetric
 
         $figures[] = new BoardFigureData(
             id: 'annual-share',
-            label: 'On annual terms',
+            label: __('beam-exec::messages.labels_on_annual_terms'),
             value: Figures::percent(Figures::share(count($annual), count($subscribed))),
         );
         $figures[] = new BoardFigureData(
             id: 'paused',
-            label: 'Paused',
+            label: __('beam-exec::messages.labels_paused'),
             value: count($paused),
             tone: $paused === [] ? null : SummaryFigureData::TONE_WARN,
         );
-        $figures[] = new BoardFigureData(id: 'unsubscribed', label: 'Without a plan', value: $unsubscribed);
+        $figures[] = new BoardFigureData(id: 'unsubscribed', label: __('beam-exec::messages.labels_without_a_plan'), value: $unsubscribed);
 
         return $figures;
     }

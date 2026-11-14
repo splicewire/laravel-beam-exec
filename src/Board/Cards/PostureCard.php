@@ -3,7 +3,6 @@
 namespace Splicewire\Beam\Exec\Board\Cards;
 
 use Carbon\CarbonInterface;
-use Rushing\Doctor\DoctorStatus;
 use Schemastud\Frame\Data\SummaryFigureData;
 use Splicewire\Beam\Exec\Board\Attributes\BoardCard;
 use Splicewire\Beam\Exec\Board\BoardSource;
@@ -48,28 +47,28 @@ final class PostureCard implements FacetedBoardMetric
         $unmeasured = count($signals) - $passing - $warnings - $failing;
 
         [$headline, $tone] = match (true) {
-            $failing > 0 => [ucfirst(DoctorStatus::Fail->value), SummaryFigureData::TONE_DANGER],
-            $warnings > 0 => [ucfirst(DoctorStatus::Warn->value), SummaryFigureData::TONE_WARN],
-            $passing > 0 => [ucfirst(DoctorStatus::Pass->value), SummaryFigureData::TONE_ACTIVE],
-            default => ['Unmeasured', null],
+            $failing > 0 => [__('beam-exec::messages.posture_fail'), SummaryFigureData::TONE_DANGER],
+            $warnings > 0 => [__('beam-exec::messages.posture_warn'), SummaryFigureData::TONE_WARN],
+            $passing > 0 => [__('beam-exec::messages.posture_pass'), SummaryFigureData::TONE_ACTIVE],
+            default => [__('beam-exec::messages.labels_unmeasured'), null],
         };
 
         return [
-            new BoardFigureData(id: 'status', label: 'Posture', value: $headline, tone: $tone),
-            new BoardFigureData(id: 'passing', label: 'Passing', value: $passing, tone: SummaryFigureData::TONE_ACTIVE),
+            new BoardFigureData(id: 'status', label: __('beam-exec::messages.labels_posture'), value: $headline, tone: $tone),
+            new BoardFigureData(id: 'passing', label: __('beam-exec::messages.labels_passing'), value: $passing, tone: SummaryFigureData::TONE_ACTIVE),
             new BoardFigureData(
                 id: 'warnings',
-                label: 'Warnings',
+                label: __('beam-exec::messages.labels_warnings'),
                 value: $warnings,
                 tone: $warnings > 0 ? SummaryFigureData::TONE_WARN : null,
             ),
             new BoardFigureData(
                 id: 'failing',
-                label: 'Failing',
+                label: __('beam-exec::messages.labels_failing'),
                 value: $failing,
                 tone: $failing > 0 ? SummaryFigureData::TONE_DANGER : null,
             ),
-            new BoardFigureData(id: 'unmeasured', label: 'Unmeasured', value: $unmeasured),
+            new BoardFigureData(id: 'unmeasured', label: __('beam-exec::messages.labels_unmeasured'), value: $unmeasured),
             ...$this->age($signals, $source),
         ];
     }
@@ -90,8 +89,8 @@ final class PostureCard implements FacetedBoardMetric
 
         return [new BoardFigureData(
             id: 'measured',
-            label: 'Measured',
-            value: $oldest->diffForHumans($source->asOf(), CarbonInterface::DIFF_RELATIVE_TO_NOW),
+            label: __('beam-exec::messages.labels_measured'),
+            value: __('beam-exec::messages.measurement_age', ['age' => $oldest->locale(app()->getLocale())->diffForHumans($source->asOf(), CarbonInterface::DIFF_RELATIVE_TO_NOW)]),
         )];
     }
 }

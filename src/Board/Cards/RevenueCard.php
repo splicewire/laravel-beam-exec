@@ -63,33 +63,33 @@ final class RevenueCard implements FacetedBoardMetric
         $forecast = Figures::forecast($source, $now);
 
         $figures = [
-            new BoardFigureData(id: 'mrr', label: 'MRR', value: $money($month->endingMrr), tone: SummaryFigureData::TONE_ACTIVE),
-            new BoardFigureData(id: 'arr', label: 'ARR', value: $money($month->arr())),
+            new BoardFigureData(id: 'mrr', label: __('beam-exec::messages.labels_mrr'), value: $money($month->endingMrr), tone: SummaryFigureData::TONE_ACTIVE),
+            new BoardFigureData(id: 'arr', label: __('beam-exec::messages.labels_arr'), value: $money($month->arr())),
             new BoardFigureData(
                 id: 'net-new-mrr',
-                label: 'Net new MRR this month',
+                label: __('beam-exec::messages.labels_net_new_mrr_this_month'),
                 value: $money($month->netNewMrr()),
                 tone: $month->netNewMrr() < 0 ? SummaryFigureData::TONE_WARN : null,
             ),
-            new BoardFigureData(id: 'new-mrr', label: 'New MRR', value: $money($month->newMrr)),
-            new BoardFigureData(id: 'expansion-mrr', label: 'Expansion MRR', value: $money($month->expansionMrr)),
-            new BoardFigureData(id: 'reactivation-mrr', label: 'Reactivation MRR', value: $money($month->reactivationMrr)),
-            new BoardFigureData(id: 'contraction-mrr', label: 'Contraction MRR', value: $money($month->contractionMrr)),
+            new BoardFigureData(id: 'new-mrr', label: __('beam-exec::messages.labels_new_mrr'), value: $money($month->newMrr)),
+            new BoardFigureData(id: 'expansion-mrr', label: __('beam-exec::messages.labels_expansion_mrr'), value: $money($month->expansionMrr)),
+            new BoardFigureData(id: 'reactivation-mrr', label: __('beam-exec::messages.labels_reactivation_mrr'), value: $money($month->reactivationMrr)),
+            new BoardFigureData(id: 'contraction-mrr', label: __('beam-exec::messages.labels_contraction_mrr'), value: $money($month->contractionMrr)),
             new BoardFigureData(
                 id: 'churned-mrr',
-                label: 'Churned MRR',
+                label: __('beam-exec::messages.labels_churned_mrr'),
                 value: $money($month->churnedMrr),
                 tone: $month->churnedMrr > 0 ? SummaryFigureData::TONE_WARN : null,
             ),
-            new BoardFigureData(id: 'paying', label: 'Paying customers', value: $month->endingLogos),
-            new BoardFigureData(id: 'logo-churn', label: 'Logo churn this month', value: Figures::percent($month->logoChurnRate())),
+            new BoardFigureData(id: 'paying', label: __('beam-exec::messages.labels_paying_customers'), value: $month->endingLogos),
+            new BoardFigureData(id: 'logo-churn', label: __('beam-exec::messages.labels_logo_churn_this_month'), value: Figures::percent($month->logoChurnRate())),
             new BoardFigureData(
                 id: 'nrr-12',
-                label: 'Net revenue retention, 12 months',
+                label: __('beam-exec::messages.labels_net_revenue_retention_12_months'),
                 value: Figures::percent($retention),
                 tone: $retention === null ? null : ($retention >= 1.0 ? SummaryFigureData::TONE_ACTIVE : SummaryFigureData::TONE_WARN),
             ),
-            new BoardFigureData(id: 'usage-revenue', label: 'Usage revenue this month', value: $money($month->usageUsd)),
+            new BoardFigureData(id: 'usage-revenue', label: __('beam-exec::messages.labels_usage_revenue_this_month'), value: $money($month->usageUsd)),
         ];
 
         return $forecast === null ? $figures : array_map(fn (BoardFigureData $figure): BoardFigureData => new BoardFigureData(

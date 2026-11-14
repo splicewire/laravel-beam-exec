@@ -8,11 +8,12 @@ use Splicewire\Beam\Exec\Board\Lens\BoardLens;
 use Splicewire\Beam\Exec\Board\Scenarios\ScenarioBuilder;
 use Splicewire\Beam\Exec\Data\ScenarioCatalogData;
 use Splicewire\Beam\Exec\Data\ScenarioIdData;
+use Splicewire\Beam\Exec\Localization\ExecAccessDeniedException;
+use Splicewire\Beam\Exec\Localization\ExecError;
 use Splicewire\Beam\Exec\Realm\ExecRealm;
 use Splicewire\Beam\Particle\Attributes\ParticleOp;
 use Splicewire\Beam\Particle\OperationKind;
 use Splicewire\Beam\Particle\Subject\NoSubject;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Delete a stored scenario. Scaffolded with `splicewire:beam:make:particle-op`.
@@ -41,7 +42,7 @@ class DeleteScenario
     public static function handle(mixed $model, Request $request, mixed $actor): ScenarioCatalogData
     {
         if (! app(Gate::class)->forUser($actor)->allows('entitlement:'.ExecRealm::ENTITLEMENT)) {
-            throw new AccessDeniedHttpException('Deleting a scenario needs a board seat (exec.view).');
+            throw new ExecAccessDeniedException(ExecError::DeleteBoardSeat);
         }
 
         $input = ScenarioIdData::validateAndCreate($request->all());

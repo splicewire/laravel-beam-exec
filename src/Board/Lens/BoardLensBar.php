@@ -40,10 +40,10 @@ final class BoardLensBar
     public const SWITCH_ROUTE = 'exec-dashboard.switch-lens';
 
     private const OPTIONS = [
-        BoardLensMode::Live->value => ['Live', 'The estate as it stands, synthetic tenants included.'],
-        BoardLensMode::Truth->value => ['Truth', 'Real tenants only.'],
-        BoardLensMode::Scenario->value => ['Scenario', 'A synthetic portfolio, modelled in memory.'],
-        BoardLensMode::Projection->value => ['Projection', 'Last month\'s revenue held flat and run forward.'],
+        BoardLensMode::Live->value => ['beam-exec::messages.lens_live', 'beam-exec::messages.lens_the_estate_as_it_stands_synthetic_tenants_included'],
+        BoardLensMode::Truth->value => ['beam-exec::messages.lens_truth', 'beam-exec::messages.lens_real_tenants_only'],
+        BoardLensMode::Scenario->value => ['beam-exec::messages.lens_scenario', 'beam-exec::messages.lens_a_synthetic_portfolio_modelled_in_memory'],
+        BoardLensMode::Projection->value => ['beam-exec::messages.lens_projection', 'beam-exec::messages.lens_last_month_s_revenue_held_flat_and_run_forward'],
     ];
 
     public function __construct(
@@ -59,8 +59,8 @@ final class BoardLensBar
         foreach (self::OPTIONS as $value => [$label, $description]) {
             $options[] = new BoardLensOptionData(
                 value: $value,
-                label: $label,
-                description: $description,
+                label: __($label),
+                description: __($description),
                 active: $lens->mode->value === $value,
                 available: $this->resolver->choose($value) !== null,
             );
@@ -92,7 +92,7 @@ final class BoardLensBar
             $options[] = new BoardLensOptionData(
                 value: BoardLens::scenario($id)->value(),
                 label: $portfolio->label,
-                description: $this->portfolios->declares($id) ? 'Declared by the host.' : 'Saved with the scenario builder.',
+                description: $this->portfolios->declares($id) ? __('beam-exec::messages.lens_declared_by_the_host') : __('beam-exec::messages.lens_saved_with_the_scenario_builder'),
                 active: $lens->mode === BoardLensMode::Scenario && $lens->portfolio === $id,
                 available: true,
             );
@@ -107,12 +107,12 @@ final class BoardLensBar
         $from = $source->synthesizedFrom();
 
         if ($from !== null) {
-            return new BoardLensBannerData(BoardLensBannerData::SYNTHESIZED, BoardWatermark::TEXT, $from);
+            return new BoardLensBannerData(BoardLensBannerData::SYNTHESIZED, __('beam-exec::messages.watermark_synthesized_not_real_data'), $from);
         }
 
         $projection = $source->projection();
 
-        return $projection === null ? null : new BoardLensBannerData(BoardLensBannerData::PROJECTED, BoardWatermark::PROJECTED_TEXT, $projection->describe());
+        return $projection === null ? null : new BoardLensBannerData(BoardLensBannerData::PROJECTED, __('beam-exec::messages.watermark_projected_not_real_data'), $projection->describe());
     }
 
     /** Flag `$request`'s response no-store when `$source` is watermarked. */

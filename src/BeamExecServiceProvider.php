@@ -10,6 +10,7 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Splicewire\Beam\Exec\Concerns\WiresBoardCards;
 use Splicewire\Beam\Exec\Concerns\WiresBoardLens;
 use Splicewire\Beam\Exec\Concerns\WiresExecRealm;
+use Splicewire\Beam\Exec\Concerns\WiresExecText;
 use Splicewire\Beam\Exec\Concerns\WiresPosture;
 use Splicewire\Beam\Exec\Console\MakeBoardCardCommand;
 use Splicewire\Beam\Exec\Console\RefreshPostureCommand;
@@ -32,6 +33,7 @@ class BeamExecServiceProvider extends PackageServiceProvider implements ChainsTr
     use WiresBoardCards;
     use WiresBoardLens;
     use WiresExecRealm;
+    use WiresExecText;
     use WiresPosture;
 
     protected function registrant(): string
