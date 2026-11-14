@@ -134,7 +134,11 @@ afterEach(function () {
     Carbon::setTestNow();
 });
 
-/** Retain full raw JSON and headers; comparison permits only reviewed additive fields and volatile headers. */
+/**
+ * Ordinary CI pins every English string byte and all existing body members from the verified pre-change responses.
+ * Raw bodies remain in the committed fixture; strict decoded equality permits JSON encoding differences without normalizing any string bytes.
+ * EXEC25_BASELINE adds a proof-only comparison against a fresh independently captured baseline, without replacing CI pins.
+ */
 function localization25Snapshot(string $name, TestResponse $response): void
 {
     $snapshot = [
@@ -147,12 +151,19 @@ function localization25Snapshot(string $name, TestResponse $response): void
     if ($capture !== false && $capture !== '') {
         file_put_contents($capture, json_encode(['name' => $name, ...$snapshot], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)."\n", FILE_APPEND);
     }
+    $pins = json_decode(file_get_contents(__DIR__.'/../Fixtures/Localization/english-responses.json'), true, flags: JSON_THROW_ON_ERROR);
+    expect(array_column($pins, 'name'))->toHaveCount(12)
+        ->and(count(array_unique(array_column($pins, 'name'))))->toBe(12);
+    $comparisons = [$pins];
     $baseline = getenv('EXEC25_BASELINE');
     if ($baseline !== false && $baseline !== '') {
-        $rows = array_map(fn (string $line): array => json_decode($line, true, flags: JSON_THROW_ON_ERROR), file($baseline, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+        $comparisons[] = array_map(fn (string $line): array => json_decode($line, true, flags: JSON_THROW_ON_ERROR), file($baseline, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+    }
+    foreach ($comparisons as $rows) {
         $expected = collect($rows)->firstWhere('name', $name);
         expect($expected)->not->toBeNull($name);
         unset($expected['name']);
+        expect(json_decode($expected['bodyRaw'], true, flags: JSON_THROW_ON_ERROR))->toBe($expected['body']);
         $comparison = $snapshot;
         // The capture retains raw bytes. JSON formatting may differ when additive code fields are encoded.
         unset($expected['bodyRaw'], $comparison['bodyRaw']);
@@ -268,7 +279,9 @@ it('marks locally owned messages through actual validation and scenario preview 
     ] as [$url, $body]) {
         nextLocalization25Request();
         $response = $this->actingAs($this->operator)->postJson($url, $body)->assertUnprocessable();
+        expect($response->json('errors'))->toBeArray()->not->toBeEmpty();
         foreach ($response->json('errors') as $field => $messages) {
+            expect($messages)->not->toBeEmpty();
             foreach ($messages as $message) {
                 expect(PseudoLocale::isMarked($message))->toBeTrue($url.' '.$field);
             }
@@ -277,6 +290,10 @@ it('marks locally owned messages through actual validation and scenario preview 
     nextLocalization25Request();
     $response = $this->actingAs($this->operator)->postJson('/exec/preview-scenario', localization25Draft())->assertOk();
     expect($response->json('data.label'))->toBe('Board upside');
+    $months = ['2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08'];
+    $revenueKeys = ['synthesized', 'mrr', 'arr', 'net-new-mrr', 'new-mrr', 'expansion-mrr', 'reactivation-mrr', 'contraction-mrr', 'churned-mrr', 'paying', 'logo-churn', 'nrr-12', 'usage-revenue'];
+    expect(array_column($response->json('data.revenue'), 'key'))->toBe($revenueKeys)
+        ->and(array_column($response->json('data.trend'), 'key'))->toBe(['synthesized', ...$months]);
     foreach (['revenue', 'trend'] as $series) {
         foreach ($response->json('data.'.$series) as $index => $figure) {
             expect(PseudoLocale::isMarked($figure['label']))->toBeTrue($series.' '.$index);
@@ -296,8 +313,23 @@ it('marks every runtime card label from the registry while retaining authored so
         synthesizedFrom: 'Authored portfolio',
     );
     $registry = app(BoardCardRegistry::class);
-    foreach ($registry->definitions() as $definition) {
-        foreach ($registry->figures($definition, $source) as $figure) {
+    // These are the configured built-ins and their exact rows for the empty authored source above.
+    $expectedFigures = [
+        'tenants' => ['total', 'active', 'new', 'synthetic'],
+        'revenue' => ['mrr', 'arr', 'net-new-mrr', 'new-mrr', 'expansion-mrr', 'reactivation-mrr', 'contraction-mrr', 'churned-mrr', 'paying', 'logo-churn', 'nrr-12', 'usage-revenue'],
+        'mrr-trend' => ['2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08'],
+        'growth' => ['month-growth', 'new-this-month', 'new-last-month', 'new-12-months', 'year-growth'],
+        'plan-mix' => ['subscribed', 'annual-share', 'paused', 'unsubscribed'],
+        'usage' => ['cost-this-month', 'cost-last-month', 'cost-change', 'active-tenants', 'top-meter'],
+        'posture' => ['status', 'passing', 'warnings', 'failing', 'unmeasured'],
+        'risk' => ['open', 'suspended', 'failed-provisioning', 'failing-checks'],
+    ];
+    $definitions = $registry->definitions();
+    expect(array_map(fn ($definition): string => $definition->key(), $definitions))->toBe(array_keys($expectedFigures));
+    foreach ($definitions as $definition) {
+        $figures = $registry->figures($definition, $source);
+        expect(array_map(fn ($figure): string => $figure->id, $figures))->toBe(['synthesized', ...$expectedFigures[$definition->key()]]);
+        foreach ($figures as $figure) {
             expect(PseudoLocale::isMarked($figure->label))->toBeTrue($definition->key().' '.$figure->id);
         }
     }
@@ -309,8 +341,10 @@ it('marks every runtime card label from the registry while retaining authored so
         expect(PseudoLocale::isMarked($figures[0]->value))->toBeTrue($status)
             ->and($signal->detail)->toBe('Unknown report diagnostic');
     }
-    foreach (['beam_exec_tones', 'beam_exec_observations'] as $handle) {
-        foreach (BoardFacetOptions::choices($handle) as $option) {
+    foreach (['beam_exec_tones' => ['active', 'busy', 'warn', 'danger', 'neutral'], 'beam_exec_observations' => ['measured', 'forecast']] as $handle => $expectedValues) {
+        $options = BoardFacetOptions::choices($handle);
+        expect(array_column($options, 'value'))->toBe($expectedValues);
+        foreach ($options as $option) {
             expect(PseudoLocale::isMarked($option['label']))->toBeTrue($handle.' '.$option['value']);
         }
     }
@@ -335,6 +369,8 @@ it('marks runtime lens choices and authorization refusals on their real read and
     app()->setLocale('en-XA');
     app()->instance(BoardSource::class, new InMemoryBoardSource);
     $lens = $this->actingAs($this->operator)->getJson('/exec/lens')->assertOk();
+    expect(array_column($lens->json('data.options'), 'value'))->toBe(['live', 'truth', 'scenario', 'projection'])
+        ->and(array_column($lens->json('data.scenarios'), 'value'))->toBe(['scenario:demo-mixed-book']);
     foreach ($lens->json('data.options') as $option) {
         foreach (['label', 'description'] as $field) {
             expect(PseudoLocale::isMarked($option[$field]))->toBeTrue($option['value'].' '.$field);
@@ -346,6 +382,14 @@ it('marks runtime lens choices and authorization refusals on their real read and
     $manageOnly = Localization25User::create(['id' => (string) Str::uuid(), 'email' => 'manage-only@beam.test']);
     nextLocalization25Request();
     $this->actingAs($this->operator)->postJson('/exec/save-scenario', [...localization25Draft(), 'id' => 'board-upside'])->assertSuccessful();
+    nextLocalization25Request();
+    $savedLens = $this->actingAs($this->operator)->getJson('/exec/lens')->assertOk();
+    expect(array_column($savedLens->json('data.scenarios'), 'value'))->toBe(['scenario:demo-mixed-book', 'scenario:board-upside']);
+    $savedScenario = collect($savedLens->json('data.scenarios'))->firstWhere('value', 'scenario:board-upside');
+    expect($savedScenario)->not->toBeNull()
+        ->and($savedScenario['label'])->toBe('Board upside')
+        ->and($savedScenario['description'])->toBe(__('beam-exec::messages.lens_saved_with_the_scenario_builder'))
+        ->and(PseudoLocale::isMarked($savedScenario['description']))->toBeTrue();
     foreach (['save', 'delete'] as $op) {
         nextLocalization25Request();
         $response = $this->actingAs($manageOnly)->postJson('/exec/'.$op.'-scenario', [...localization25Draft(), 'id' => 'board-upside'])->assertForbidden();
@@ -455,7 +499,9 @@ it('retains Spatie redirect and error bag through the real validateAndCreate pip
         expect($exception)->toBeInstanceOf(ExecValidationException::class)
             ->and($exception->errorBag)->toBe('exec-original-bag')
             ->and($exception->redirectTo)->toBe('/exec-original-redirect');
+        expect($exception->errors())->not->toBeEmpty();
         foreach ($exception->errors() as $field => $messages) {
+            expect($messages)->not->toBeEmpty();
             expect($exception->codes()[$field])->toHaveCount(count($messages));
         }
     }

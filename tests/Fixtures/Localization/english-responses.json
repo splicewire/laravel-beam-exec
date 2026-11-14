@@ -1,0 +1,264 @@
+[
+    {
+        "name": "lens-invalid",
+        "status": 422,
+        "headers": {
+            "cache-control": [
+                "no-cache, private"
+            ],
+            "content-type": [
+                "application/json"
+            ]
+        },
+        "bodyRaw": "{\"message\":\"The board has no such lens. Choose live, truth, scenario or projection, with a portfolio this host declares.\",\"errors\":{\"lens\":[\"The board has no such lens. Choose live, truth, scenario or projection, with a portfolio this host declares.\"]}}",
+        "body": {
+            "message": "The board has no such lens. Choose live, truth, scenario or projection, with a portfolio this host declares.",
+            "errors": {
+                "lens": [
+                    "The board has no such lens. Choose live, truth, scenario or projection, with a portfolio this host declares."
+                ]
+            }
+        }
+    },
+    {
+        "name": "scenario-file",
+        "status": 422,
+        "headers": {
+            "cache-control": [
+                "no-cache, private"
+            ],
+            "content-type": [
+                "application/json"
+            ]
+        },
+        "bodyRaw": "{\"message\":\"That scenario is declared by the host in a file; remove the file to remove it.\",\"errors\":{\"id\":[\"That scenario is declared by the host in a file; remove the file to remove it.\"]}}",
+        "body": {
+            "message": "That scenario is declared by the host in a file; remove the file to remove it.",
+            "errors": {
+                "id": [
+                    "That scenario is declared by the host in a file; remove the file to remove it."
+                ]
+            }
+        }
+    },
+    {
+        "name": "scenario-missing",
+        "status": 422,
+        "headers": {
+            "cache-control": [
+                "no-cache, private"
+            ],
+            "content-type": [
+                "application/json"
+            ]
+        },
+        "bodyRaw": "{\"message\":\"There is no stored scenario with that id.\",\"errors\":{\"id\":[\"There is no stored scenario with that id.\"]}}",
+        "body": {
+            "message": "There is no stored scenario with that id.",
+            "errors": {
+                "id": [
+                    "There is no stored scenario with that id."
+                ]
+            }
+        }
+    },
+    {
+        "name": "save-declared",
+        "status": 422,
+        "headers": {
+            "cache-control": [
+                "no-cache, private"
+            ],
+            "content-type": [
+                "application/json"
+            ]
+        },
+        "bodyRaw": "{\"message\":\"That id belongs to a portfolio the host declares in a file. Choose another id.\",\"errors\":{\"id\":[\"That id belongs to a portfolio the host declares in a file. Choose another id.\"]}}",
+        "body": {
+            "message": "That id belongs to a portfolio the host declares in a file. Choose another id.",
+            "errors": {
+                "id": [
+                    "That id belongs to a portfolio the host declares in a file. Choose another id."
+                ]
+            }
+        }
+    },
+    {
+        "name": "save-format",
+        "status": 422,
+        "headers": {
+            "cache-control": [
+                "no-cache, private"
+            ],
+            "content-type": [
+                "application/json"
+            ]
+        },
+        "bodyRaw": "{\"message\":\"Use lowercase letters, digits and single hyphens (for example board-upside).\",\"errors\":{\"id\":[\"Use lowercase letters, digits and single hyphens (for example board-upside).\"]}}",
+        "body": {
+            "message": "Use lowercase letters, digits and single hyphens (for example board-upside).",
+            "errors": {
+                "id": [
+                    "Use lowercase letters, digits and single hyphens (for example board-upside)."
+                ]
+            }
+        }
+    },
+    {
+        "name": "save-blueprint",
+        "status": 422,
+        "headers": {
+            "cache-control": [
+                "no-cache, private"
+            ],
+            "content-type": [
+                "application/json"
+            ]
+        },
+        "bodyRaw": "{\"message\":\"Choose a blueprint this host declares.\",\"errors\":{\"members.0.blueprint\":[\"Choose a blueprint this host declares.\"]}}",
+        "body": {
+            "message": "Choose a blueprint this host declares.",
+            "errors": {
+                "members.0.blueprint": [
+                    "Choose a blueprint this host declares."
+                ]
+            }
+        }
+    },
+    {
+        "name": "save-multiple",
+        "status": 422,
+        "headers": {
+            "cache-control": [
+                "no-cache, private"
+            ],
+            "content-type": [
+                "application/json"
+            ]
+        },
+        "bodyRaw": "{\"message\":\"Use lowercase letters, digits and single hyphens (for example board-upside). (and 5 more errors)\",\"errors\":{\"id\":[\"Use lowercase letters, digits and single hyphens (for example board-upside).\"],\"label\":[\"The label field is required.\"],\"churnRate\":[\"The churn rate field must not be greater than 1.\"],\"members.0.blueprint\":[\"Choose a blueprint this host declares.\"],\"members.0.count\":[\"The members.0.count field must be at least 1.\"],\"members.0.startOffsetMonths\":[\"The members.0.startOffsetMonths field must be at least 0.\"]}}",
+        "body": {
+            "message": "Use lowercase letters, digits and single hyphens (for example board-upside). (and 5 more errors)",
+            "errors": {
+                "id": [
+                    "Use lowercase letters, digits and single hyphens (for example board-upside)."
+                ],
+                "label": [
+                    "The label field is required."
+                ],
+                "churnRate": [
+                    "The churn rate field must not be greater than 1."
+                ],
+                "members.0.blueprint": [
+                    "Choose a blueprint this host declares."
+                ],
+                "members.0.count": [
+                    "The members.0.count field must be at least 1."
+                ],
+                "members.0.startOffsetMonths": [
+                    "The members.0.startOffsetMonths field must be at least 0."
+                ]
+            }
+        }
+    },
+    {
+        "name": "save-board-seat",
+        "status": 403,
+        "headers": {
+            "cache-control": [
+                "no-cache, private"
+            ],
+            "content-type": [
+                "application/json"
+            ]
+        },
+        "bodyRaw": "{\n    \"message\": \"Saving a scenario needs a board seat (exec.view).\"\n}",
+        "body": {
+            "message": "Saving a scenario needs a board seat (exec.view)."
+        }
+    },
+    {
+        "name": "delete-board-seat",
+        "status": 422,
+        "headers": {
+            "cache-control": [
+                "no-cache, private"
+            ],
+            "content-type": [
+                "application/json"
+            ]
+        },
+        "bodyRaw": "{\"message\":\"There is no stored scenario with that id.\",\"errors\":{\"id\":[\"There is no stored scenario with that id.\"]}}",
+        "body": {
+            "message": "There is no stored scenario with that id.",
+            "errors": {
+                "id": [
+                    "There is no stored scenario with that id."
+                ]
+            }
+        }
+    },
+    {
+        "name": "preview-unpriced",
+        "status": 422,
+        "headers": {
+            "cache-control": [
+                "no-store, private"
+            ],
+            "content-type": [
+                "application/json"
+            ]
+        },
+        "bodyRaw": "{\"message\":\"The scenario 'Board upside' cannot be priced: this host has no plan with the slug 'starter' (named by demo-tessaline-works). Its price list has: (none).\",\"errors\":{\"members\":[\"The scenario 'Board upside' cannot be priced: this host has no plan with the slug 'starter' (named by demo-tessaline-works). Its price list has: (none).\"]}}",
+        "body": {
+            "message": "The scenario 'Board upside' cannot be priced: this host has no plan with the slug 'starter' (named by demo-tessaline-works). Its price list has: (none).",
+            "errors": {
+                "members": [
+                    "The scenario 'Board upside' cannot be priced: this host has no plan with the slug 'starter' (named by demo-tessaline-works). Its price list has: (none)."
+                ]
+            }
+        }
+    },
+    {
+        "name": "forward-preview",
+        "status": 422,
+        "headers": {
+            "cache-control": [
+                "no-store, private"
+            ],
+            "content-type": [
+                "application/json"
+            ]
+        },
+        "bodyRaw": "{\"message\":\"Unknown downstream 'diagnostic' :parameter <node> \\u2014 unchanged.\",\"errors\":{\"members\":[\"Unknown downstream 'diagnostic' :parameter <node> \\u2014 unchanged.\"]}}",
+        "body": {
+            "message": "Unknown downstream 'diagnostic' :parameter <node> — unchanged.",
+            "errors": {
+                "members": [
+                    "Unknown downstream 'diagnostic' :parameter <node> — unchanged."
+                ]
+            }
+        }
+    },
+    {
+        "name": "forward-save",
+        "status": 422,
+        "headers": {
+            "cache-control": [
+                "no-cache, private"
+            ],
+            "content-type": [
+                "application/json"
+            ]
+        },
+        "bodyRaw": "{\"message\":\"Unknown downstream 'diagnostic' :parameter <node> \\u2014 unchanged.\",\"errors\":{\"id\":[\"Unknown downstream 'diagnostic' :parameter <node> \\u2014 unchanged.\"]}}",
+        "body": {
+            "message": "Unknown downstream 'diagnostic' :parameter <node> — unchanged.",
+            "errors": {
+                "id": [
+                    "Unknown downstream 'diagnostic' :parameter <node> — unchanged."
+                ]
+            }
+        }
+    }
+]
