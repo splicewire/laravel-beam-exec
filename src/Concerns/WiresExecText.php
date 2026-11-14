@@ -11,7 +11,6 @@ trait WiresExecText
     #[Chained('boot', order: 90)]
     protected function bootExecText(): void
     {
-        $this->loadTranslationsFrom(__DIR__.'/../../lang', 'beam-exec');
         $this->callAfterResolving(ExceptionHandler::class, function ($handler): void {
             $handler->renderable(ExecErrorResponses::render(...));
         });
