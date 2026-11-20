@@ -5,6 +5,7 @@ namespace Splicewire\Beam\Exec\Concerns;
 use Rushing\DataFilters\DataFilterManager;
 use Rushing\Popcorn\Concerns\Chained;
 use Schemastud\Frame\Contracts\ResourceContextContributor;
+use Schemastud\Frame\Registry\WidgetContextProjector;
 use Splicewire\Beam\Exec\BeamExecServiceProvider;
 use Splicewire\Beam\Exec\Board\BoardCardBacking;
 use Splicewire\Beam\Exec\Board\BoardCardContextNodes;
@@ -78,6 +79,7 @@ trait WiresBoardCards
         $this->app->extend(ResourceContextContributor::class, fn (ResourceContextContributor $inner, $app): ResourceContextContributor => new BoardCardContextNodes(
             $inner,
             $app->make(BoardCardRegistry::class),
+            $app->make(WidgetContextProjector::class),
         ));
     }
 

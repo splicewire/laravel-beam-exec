@@ -22,10 +22,16 @@ use Splicewire\Beam\Exec\Data\BoardFigureData;
  */
 final class BoardCardContextNodes implements ResourceContextContributor
 {
+    private readonly WidgetContextProjector $projector;
+
+    /** frame-foundation 89: frame's projector is handed in (the decorator wiring passes the container's); null = a plain one. */
     public function __construct(
         private readonly ResourceContextContributor $inner,
         private readonly BoardCardRegistry $cards,
-    ) {}
+        ?WidgetContextProjector $projector = null,
+    ) {
+        $this->projector = $projector ?? new WidgetContextProjector;
+    }
 
     public function nodesFor(string $key): array
     {
@@ -36,7 +42,7 @@ final class BoardCardContextNodes implements ResourceContextContributor
             return $nodes;
         }
 
-        $root = (new WidgetContextProjector)->forClass(new ReflectionClass($definition->class));
+        $root = $this->projector->forClass(new ReflectionClass($definition->class));
 
         if ($root !== []) {
             $nodes[''] = array_merge($nodes[''] ?? [], $root);
