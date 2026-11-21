@@ -24,13 +24,13 @@ final class BoardCardContextNodes implements ResourceContextContributor
 {
     private readonly WidgetContextProjector $projector;
 
-    /** frame-foundation 89: frame's projector is handed in (the decorator wiring passes the container's); null = a plain one. */
+    /** frame-foundation 89: frame's projector is handed in (the decorator wiring passes the container's); null = WidgetContextProjector::resolved(). */
     public function __construct(
         private readonly ResourceContextContributor $inner,
         private readonly BoardCardRegistry $cards,
         ?WidgetContextProjector $projector = null,
     ) {
-        $this->projector = $projector ?? new WidgetContextProjector;
+        $this->projector = $projector ?? WidgetContextProjector::resolved();   // 89 step 3 (review LOW 2): needs frame's 89
     }
 
     public function nodesFor(string $key): array
