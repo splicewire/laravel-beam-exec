@@ -6,7 +6,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Schemastud\Frame\Attributes\WidgetIn;
-use Schemastud\Frame\Contracts\ResourceContextContributor;
+use Schemastud\Frame\Registry\ContextContributorRegistry;
 use Schemastud\Frame\Registry\ContextManifest;
 use Splicewire\Beam\Commerce\Money\MoneyPresenter;
 use Splicewire\Beam\Commerce\Revenue\PartyPeriodRevenue;
@@ -301,6 +301,6 @@ it('chooses the trend-card widget for the MRR trend card only, through frame\'s 
 
     expect($trend['summary']['widget'] ?? null)->toBe('trend-card')
         ->and($revenue)->not->toHaveKey('summary')
-        ->and(app(ResourceContextContributor::class)->nodesFor('records'))->toBeArray()
+        ->and(app(ContextContributorRegistry::class)->nodesFor('records'))->toBeArray()
         ->and((new ReflectionClass(MrrTrendCard::class))->getAttributes(WidgetIn::class))->toHaveCount(1);
 });

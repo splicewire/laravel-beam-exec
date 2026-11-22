@@ -42,13 +42,16 @@ abstract class TestCase extends Orchestra
      */
     protected function getPackageProviders($app): array
     {
+        // frame-foundation 93: beam boots before beam-exec, as package discovery orders them on a host (alphabetical),
+        // because a context contributor's position in frame's `frame.context-contributors` is provider boot order
+        // (decision 87 row 13; tests/Board/ContextContributorOrderTest.php).
         return [
+            BeamServiceProvider::class,
             BeamExecServiceProvider::class,
             BeamTenancyServiceProvider::class,
             BeamUxServiceProvider::class,
             BeamSitemapServiceProvider::class,
             BeamWorkflowsServiceProvider::class,
-            BeamServiceProvider::class,
             ActivitylogServiceProvider::class,
             LaravelDataServiceProvider::class,
             VersioningServiceProvider::class,

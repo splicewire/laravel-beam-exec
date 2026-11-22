@@ -5,6 +5,7 @@ namespace Splicewire\Beam\Exec\Concerns;
 use Rushing\DataFilters\DataFilterManager;
 use Rushing\Popcorn\Concerns\Chained;
 use Schemastud\Frame\Contracts\ResourceContextContributor;
+use Schemastud\Frame\Registry\ContextContributorRegistry;
 use Schemastud\Frame\Registry\WidgetContextProjector;
 use Splicewire\Beam\Exec\BeamExecServiceProvider;
 use Splicewire\Beam\Exec\Board\BoardCardBacking;
@@ -40,9 +41,14 @@ use Splicewire\Beam\Particle\ParticleResourceRegistry;
  * while beam-tenancy's reporting toggle excludes synthetic tenants and live otherwise (read when the request first
  * asks, so a flip needs no redeploy).
  *
- * frame's {@see ResourceContextContributor} port is decorated with {@see BoardCardContextNodes}, so a card's own
- * class-level `#[WidgetIn('summary', …)]` reaches its resource's render contexts (every card shares one record class,
- * so the class cannot carry a per-card widget).
+ * {@see BoardCardContextNodes} is a context contributor registered under the key `beam-exec.board-cards` in frame's
+ * `frame.context-contributors` registry, so a card's own class-level `#[WidgetIn('summary', …)]` reaches its resource's
+ * render contexts (every card shares one record class, so the class cannot carry a per-card widget).
+ *
+ * **beam's provider must boot before this one.** The registry's position is provider boot order, and the cards must
+ * register after beam's `beam.contributions` and `beam.collections` to win a context they share. Package discovery
+ * (alphabetical) gives that order; a hand-listed provider order that boots beam-exec first misorders the ladder
+ * (`popcorn:keys frame.context-contributors` shows it; decision 87 row 13).
  *
  * ## Boot phase: one resource per card
  *
@@ -76,8 +82,9 @@ trait WiresBoardCards
         $this->app->scoped(BoardSource::class, fn ($app): BoardSource => $app->make(BoardLensResolver::class)
             ->source($app->make(BoardLens::class)));
 
-        $this->app->extend(ResourceContextContributor::class, fn (ResourceContextContributor $inner, $app): ResourceContextContributor => new BoardCardContextNodes(
-            $inner,
+        // frame-foundation 93: the card contributor is beam-exec's own scoped binding; bootBoardCards() registers its
+        // factory in frame's context-contributor registry (nothing wraps frame's port any more).
+        $this->app->scoped(BoardCardContextNodes::class, fn ($app): BoardCardContextNodes => new BoardCardContextNodes(
             $app->make(BoardCardRegistry::class),
             $app->make(WidgetContextProjector::class),
         ));
@@ -86,6 +93,15 @@ trait WiresBoardCards
     #[Chained('boot', order: 20)]
     protected function bootBoardCards(): void
     {
+        // frame-foundation 93: registered under beam-exec's own key, after beam's two contributors (provider boot order),
+        // so a card's declaration wins a root context it shares with them; the factory resolves the scoped binding per
+        // call and captures nothing at boot (decision 87, ruling 3).
+        $this->app->make(ContextContributorRegistry::class)->register(
+            'beam-exec.board-cards',
+            static fn (): ResourceContextContributor => app(BoardCardContextNodes::class),
+            by: 'splicewire/laravel-beam-exec',
+        );
+
         if (! $this->app->bound(ParticleResourceRegistry::class)) {
             return;
         }

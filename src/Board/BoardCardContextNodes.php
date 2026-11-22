@@ -12,42 +12,37 @@ use Splicewire\Beam\Exec\Data\BoardFigureData;
  *
  * Every card resource reads the same record class, {@see BoardFigureData}, and frame reflects a resource's
  * class-level `#[WidgetIn]` off that class, so a declaration there would choose the widget for every card at once.
- * A card instead carries `#[WidgetIn('summary', …)]` on its own class, and this plug, on frame's
- * {@see ResourceContextContributor} port (which is keyed by resource key for exactly this), projects it into the
- * root node of that card's `exec-{key}` resource with frame's own projector, so frame validates it as it would on a
- * record.
+ * A card instead carries `#[WidgetIn('summary', …)]` on its own class, and this context contributor (keyed by
+ * resource key for exactly this) projects it into the root node of that card's `exec-{key}` resource with frame's own
+ * projector, so frame validates it as it would on a record.
  *
- * It decorates whatever is bound to the port (beam's contribution and collection nodes), and the card's declaration
- * wins a context both name: it is the resource's own. Every other key passes through unchanged.
+ * frame-foundation 93: it is registered under the key `beam-exec.board-cards` in frame's `frame.context-contributors`
+ * registry, after beam's two, and answers only its own root node. The card's declaration wins a context it shares with
+ * beam's nodes because a later position wins in the registry's fold (it no longer decorates anything). Every other key
+ * answers nothing.
  */
 final class BoardCardContextNodes implements ResourceContextContributor
 {
     private readonly WidgetContextProjector $projector;
 
-    /** frame-foundation 89: frame's projector is handed in (the decorator wiring passes the container's); null = WidgetContextProjector::resolved(). */
+    /** frame-foundation 89: frame's projector is handed in (beam-exec's scoped binding passes the container's); null = WidgetContextProjector::resolved(). */
     public function __construct(
-        private readonly ResourceContextContributor $inner,
         private readonly BoardCardRegistry $cards,
         ?WidgetContextProjector $projector = null,
     ) {
-        $this->projector = $projector ?? WidgetContextProjector::resolved();   // 89 step 3 (review LOW 2): needs frame's 89
+        $this->projector = $projector ?? WidgetContextProjector::resolved();
     }
 
     public function nodesFor(string $key): array
     {
-        $nodes = $this->inner->nodesFor($key);
         $definition = $this->cards->forResource($key);
 
         if ($definition === null) {
-            return $nodes;
+            return [];
         }
 
         $root = $this->projector->forClass(new ReflectionClass($definition->class));
 
-        if ($root !== []) {
-            $nodes[''] = array_merge($nodes[''] ?? [], $root);
-        }
-
-        return $nodes;
+        return $root === [] ? [] : ['' => $root];
     }
 }

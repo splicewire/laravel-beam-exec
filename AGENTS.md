@@ -49,8 +49,13 @@ Beam tier, MIT.
   and posture are refused. `BoardSource::projection()` says what is projected; `Figures::forecast()` marks a
   figure's month. Only cards with `#[BoardCard(projects: true)]` are measured under it.
 - A card's own widget (`src/Board/BoardCardContextNodes.php`): a class-level `#[WidgetIn('summary', …)]` on a
-  card class is contributed to its `exec-{key}` resource through frame's `ResourceContextContributor` port
-  (decorated in `WiresBoardCards`). `MrrTrendCard` chooses `trend-card` this way.
+  card class is contributed to its `exec-{key}` resource by a context contributor registered under a key
+  (`beam-exec.board-cards` in frame's `frame.context-contributors` registry, from `WiresBoardCards`' boot link).
+  `MrrTrendCard` chooses `trend-card` this way. **beam's provider must boot before beam-exec's:** a contributor's
+  position is provider boot order, so package discovery (alphabetical) puts beam's two keys first and the cards win a
+  shared context. A hand-listed provider order (a host's explicit list, `dont-discover`, or a testbench) that boots
+  beam-exec first misorders the ladder; `popcorn:keys frame.context-contributors` shows it, and
+  `tests/TestCase.php` lists beam first for this reason (decision 87 row 13).
 - The watermarks (`src/Board/BoardWatermark.php`): `BoardCardRegistry::figures()` measures a
   card and, when the source's `synthesizedFrom()` is non-null, flags every figure `synthesized` and
   leads with a `synthesized` figure ("Synthesized — not real data", the scenario's name, tone warn);
