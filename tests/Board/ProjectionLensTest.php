@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Schemastud\Frame\Attributes\WidgetIn;
+use Schemastud\Frame\Registry\ContextBlockFacts;
 use Schemastud\Frame\Registry\ContextContributorRegistry;
 use Schemastud\Frame\Registry\ContextManifest;
 use Splicewire\Beam\Commerce\Money\MoneyPresenter;
@@ -296,8 +297,8 @@ it('resolves the Projection lens from its cookie, over the default reading, at a
 
 it('chooses the trend-card widget for the MRR trend card only, through frame\'s context port', function () {
     $manifest = app(ContextManifest::class);
-    $trend = $manifest->forResource(BoardFigureData::class, key: 'exec-mrr-trend')['byNode'][''] ?? [];
-    $revenue = $manifest->forResource(BoardFigureData::class, key: 'exec-revenue')['byNode'][''] ?? [];
+    $trend = $manifest->forResource(BoardFigureData::class, new ContextBlockFacts(key: 'exec-mrr-trend'))['byNode'][''] ?? [];
+    $revenue = $manifest->forResource(BoardFigureData::class, new ContextBlockFacts(key: 'exec-revenue'))['byNode'][''] ?? [];
 
     expect($trend['summary']['widget'] ?? null)->toBe('trend-card')
         ->and($revenue)->not->toHaveKey('summary')
