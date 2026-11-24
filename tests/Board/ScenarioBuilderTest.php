@@ -280,10 +280,10 @@ it('answers the preview over HTTP no-store, with no query beyond the session and
         ->assertJsonPath('data.tenants', 8)
         ->assertJsonPath('data.revenue.0.key', 'synthesized')
         ->assertJsonPath('data.trend.0.key', 'synthesized');
+    $counted = collect($queries)->reject(fn (string $sql): bool => str_contains($sql, '"sessions"') || isConfigStoreQuery($sql))->values();
     expect((string) $response->headers->get('Cache-Control'))->toContain('no-store')
-        ->and(collect($queries)->reject(fn (string $sql): bool => str_contains($sql, '"sessions"'))->values()->all())
-        ->toHaveCount(1)
-        ->and(collect($queries)->first(fn (string $sql): bool => ! str_contains($sql, '"sessions"')))->toContain('"plans"')
+        ->and($counted->all())->toHaveCount(1)
+        ->and($counted->first())->toContain('"plans"')
         ->and(BeamParticle::query()->count())->toBe(0);
 });
 

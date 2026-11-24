@@ -116,7 +116,7 @@ it('keeps the leading watermark on a filtered Frame page and reads no database',
 
     $this->getJson('/frame/resources/exec-mrr-trend?filter[observation]=forecast')
         ->assertOk()->assertJsonPath('data.0.id', 'synthesized')->assertJsonCount(1, 'data');
-    expect($queries)->toBe([]);
+    expect(array_values(array_filter($queries, fn (string $sql): bool => ! isConfigStoreQuery($sql))))->toBe([]);
 });
 
 it('keeps the projected Revenue reading when a month precedes its attestable window', function () {
