@@ -7,6 +7,8 @@ use Rushing\Popcorn\Contracts\ChainsTraitMethods as ChainsTraitMethodsContract;
 use Rushing\Popcorn\Registries\ScopesRegistrant;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Splicewire\Beam\Config\ConfigSectionRegistry;
+use Splicewire\Beam\Exec\Config\BeamExecSection;
 use Splicewire\Beam\Exec\Concerns\WiresBoardCards;
 use Splicewire\Beam\Exec\Concerns\WiresBoardLens;
 use Splicewire\Beam\Exec\Concerns\WiresExecRealm;
@@ -52,6 +54,20 @@ class BeamExecServiceProvider extends PackageServiceProvider implements ChainsTr
     public function packageRegistered(): void
     {
         $this->chainTraitMethods('register');
+
+        // Register the beam.exec Config Section (ADR-0245) once beam-core's registry resolves. Deferred
+        // via callAfterResolving so a host with no ConfigSectionRegistry bound simply skips it; side-effect-
+        // safe at boot.
+        $this->callAfterResolving(
+            ConfigSectionRegistry::class,
+            static function (ConfigSectionRegistry $sections): void {
+                $sections->section(
+                    BeamExecSection::class,
+                    owner: 'splicewire/laravel-beam-exec',
+                    packageFile: dirname(__DIR__).'/config/beam/exec.php',
+                );
+            },
+        );
     }
 
     public function packageBooted(): void
